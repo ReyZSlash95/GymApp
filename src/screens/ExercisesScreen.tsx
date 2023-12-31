@@ -35,7 +35,7 @@ const ExercisesScreen = ({ route, navigation }) => {
 
  
   const handleAddExercise = (exercise) => {
-    navigation.navigate('CreatePlanScreen', { selectedExercise: exercise });
+    navigation.navigate('CreatePlan', { selectedExercise: exercise });
   };
   
 
