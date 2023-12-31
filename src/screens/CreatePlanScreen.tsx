@@ -1,9 +1,55 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
 
-const CreatePlanScreen = ({ navigation }) => {
-  const [planName, setPlanName] = useState('');
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList } from 'react-native';
 
+const CreatePlanScreen = ({ navigation, route }) => {
+  const [planName, setPlanName] = useState('');
+  const [exercises, setExercises] = useState([]);
+
+  useEffect(() => {
+    if (route.params?.selectedExercise) {
+      const newExercise = {
+        name: route.params.selectedExercise.name,
+        sets: '',
+        reps: '',
+        weight: '',
+      };
+      setExercises([...exercises, newExercise]);
+    }
+  }, [route.params?.selectedExercise]);
+
+  const handleExerciseDetailChange = (index, field, value) => {
+    const updatedExercises = [...exercises];
+    updatedExercises[index][field] = value;
+    setExercises(updatedExercises);
+  };
+
+  const renderExerciseItem = ({ item, index }) => (
+    <View style={styles.exerciseItem}>
+      <Text style={styles.exerciseName}>{item.name}</Text>
+      <TextInput
+        style={styles.input}
+        onChangeText={(value) => handleExerciseDetailChange(index, 'sets', value)}
+        placeholder="Liczba serii"
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        onChangeText={(value) => handleExerciseDetailChange(index, 'reps', value)}
+        placeholder="Liczba powtórzeń"
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        onChangeText={(value) => handleExerciseDetailChange(index, 'weight', value)}
+        placeholder="Ciężar (kg)"
+        keyboardType="numeric"
+      />
+    </View>
+  );
+  
   const handleAddExercise = () => {
     navigation.navigate('MuscleGroupSelection');
   };
@@ -36,6 +82,11 @@ const CreatePlanScreen = ({ navigation }) => {
       >
         <Text style={styles.buttonText}>Zapisz plan</Text>
       </TouchableOpacity>
+      <FlatList
+        data={exercises}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={renderExerciseItem}
+      />
     </View>
   );
 };

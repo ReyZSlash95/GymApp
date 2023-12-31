@@ -33,12 +33,13 @@ const exercisesData = {
 const ExercisesScreen = ({ route, navigation }) => {
   const { muscleGroup } = route.params;
 
-  const handleAddExercise = (exercise) => {
-    // Logika dodawania ćwiczenia do planu
-    console.log("Dodano ćwiczenie:", exercise);
-    // Tutaj możesz albo wrócić do poprzedniego ekranu, albo wykonać inne akcje
-    navigation.goBack(); // Na przykład powrót do ekranu tworzenia planu
-  };
+  const ExercisesScreen = ({ route, navigation }) => {
+    const { muscleGroup } = route.params;
+  
+    const handleAddExercise = (exercise) => {
+      // Przekazanie wybranego ćwiczenia do ekranu tworzenia planu
+      navigation.navigate('CreatePlanScreen', { selectedExercise: exercise });
+    };
 
   const renderExerciseItem = ({ item }) => (
     <TouchableOpacity 
