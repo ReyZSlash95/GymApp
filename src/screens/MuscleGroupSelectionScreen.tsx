@@ -22,6 +22,7 @@ const MuscleGroupSelectionScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+
   return (
     <FlatList
       data={muscleGroups}

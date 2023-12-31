@@ -9,41 +9,51 @@ const CreatePlanScreen = ({ navigation, route }) => {
     if (route.params?.selectedExercise && !exercises.find(e => e.name === route.params.selectedExercise.name)) {
       const newExercise = {
         name: route.params.selectedExercise.name,
-        sets: '',
-        reps: '',
-        weight: '',
+        series: [{ reps: '', weight: '' }],
       };
       setExercises([...exercises, newExercise]);
     }
   }, [route.params?.selectedExercise]);
 
-  const handleExerciseDetailChange = (index, field, value) => {
+  const addSeries = (exerciseIndex) => {
+    const newSeries = { reps: '', weight: '' };
     const updatedExercises = [...exercises];
-    updatedExercises[index][field] = value;
+    updatedExercises[exerciseIndex].series.push(newSeries);
     setExercises(updatedExercises);
+  };
+
+  const handleSeriesChange = (exerciseIndex, seriesIndex, field, value) => {
+    const updatedExercises = [...exercises];
+    updatedExercises[exerciseIndex].series[seriesIndex][field] = value;
+    setExercises(updatedExercises);
+  };
+
+  const renderSeries = (series, exerciseIndex) => {
+    return series.map((serie, seriesIndex) => (
+      <View key={seriesIndex}>
+        <TextInput
+          style={styles.input}
+          onChangeText={(value) => handleSeriesChange(exerciseIndex, seriesIndex, 'reps', value)}
+          value={serie.reps}
+          placeholder="Liczba powtórzeń"
+        />
+        <TextInput
+          style={styles.input}
+          onChangeText={(value) => handleSeriesChange(exerciseIndex, seriesIndex, 'weight', value)}
+          value={serie.weight}
+          placeholder="Ciężar (kg)"
+        />
+      </View>
+    ));
   };
 
   const renderExerciseItem = ({ item, index }) => (
     <View style={styles.exerciseItem}>
       <Text style={styles.exerciseName}>{item.name}</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={(value) => handleExerciseDetailChange(index, 'sets', value)}
-        placeholder="Liczba serii"
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={(value) => handleExerciseDetailChange(index, 'reps', value)}
-        placeholder="Liczba powtórzeń"
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={(value) => handleExerciseDetailChange(index, 'weight', value)}
-        placeholder="Ciężar (kg)"
-        keyboardType="numeric"
-      />
+      {renderSeries(item.series, index)}
+      <TouchableOpacity style={styles.button} onPress={() => addSeries(index)}>
+        <Text style={styles.buttonText}>Dodaj serię</Text>
+      </TouchableOpacity>
     </View>
   );
   
