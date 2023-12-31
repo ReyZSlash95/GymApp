@@ -1,6 +1,3 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
-
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList } from 'react-native';
 
@@ -9,7 +6,7 @@ const CreatePlanScreen = ({ navigation, route }) => {
   const [exercises, setExercises] = useState([]);
 
   useEffect(() => {
-    if (route.params?.selectedExercise) {
+    if (route.params?.selectedExercise && !exercises.find(e => e.name === route.params.selectedExercise.name)) {
       const newExercise = {
         name: route.params.selectedExercise.name,
         sets: '',

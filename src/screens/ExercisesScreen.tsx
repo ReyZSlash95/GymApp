@@ -33,13 +33,11 @@ const exercisesData = {
 const ExercisesScreen = ({ route, navigation }) => {
   const { muscleGroup } = route.params;
 
-  const ExercisesScreen = ({ route, navigation }) => {
-    const { muscleGroup } = route.params;
+ 
+  const handleAddExercise = (exercise) => {
+    navigation.navigate('CreatePlanScreen', { selectedExercise: exercise });
+  };
   
-    const handleAddExercise = (exercise) => {
-      // Przekazanie wybranego ćwiczenia do ekranu tworzenia planu
-      navigation.navigate('CreatePlanScreen', { selectedExercise: exercise });
-    };
 
   const renderExerciseItem = ({ item }) => (
     <TouchableOpacity 
