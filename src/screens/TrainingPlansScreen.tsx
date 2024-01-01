@@ -1,20 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import CreatePlanForm from './CreatePlanScreen'; // Upewnij się, że ścieżka jest poprawna
 
+import firestore from '@react-native-firebase/firestore';
+
+
 const TrainingPlansScreen = ({ navigation }) => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Plany Treningowe</Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('CreatePlan')}
-      >
-        <Text style={styles.buttonText}>Dodaj nowy plan</Text>
-      </TouchableOpacity>
-      {/* Wyświetlanie istniejących planów */}
-    </View>
-  );
+  const [plans, setPlans] = useState([]);
+
+  useEffect(() => {
+    const subscriber = firestore()
+      .collection('trainingPlans')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(querySnapshot => {
+        const plans = [];
+        querySnapshot.forEach(documentSnapshot => {
+          plans.push({
+            ...documentSnapshot.data(),
+            key: documentSnapshot.id,
+          });
+        });
+        setPlans(plans);
+      });
+
+    return () => subscriber();
+  }, []);
 };
 
 const styles = StyleSheet.create({

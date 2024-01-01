@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList } from 'react-native';
 
+import firestore from '@react-native-firebase/firestore';
+
+
+const handleSavePlan = async () => {
+  if (planName.trim() === '' || exercises.length === 0) {
+    alert('Proszę podać nazwę planu i dodać co najmniej jedno ćwiczenie.');
+    return;
+  }
+
+  try {
+    await firestore().collection('trainingPlans').add({
+      planName,
+      exercises,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    });
+    console.log("Plan zapisany");
+    navigation.goBack();
+  } catch (error) {
+    console.error("Błąd zapisu planu:", error);
+  }
+};
+
+
+
 const CreatePlanScreen = ({ navigation, route }) => {
   const [planName, setPlanName] = useState('');
   const [exercises, setExercises] = useState([]);
