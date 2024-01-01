@@ -4,43 +4,29 @@ import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList } from 'r
 import firestore from '@react-native-firebase/firestore';
 
 
-// const handleSavePlan = async () => {
-//   if (planName.trim() === '' || exercises.length === 0) {
-//     alert('Proszę podać nazwę planu i dodać co najmniej jedno ćwiczenie.');
-//     return;
-//   }
-
-//   try {
-//     await firestore().collection('trainingPlans').add({
-//       planName,
-//       exercises,
-//       createdAt: firestore.FieldValue.serverTimestamp(),
-//     });
-//     console.log("Plan zapisany");
-//     navigation.goBack();
-//   } catch (error) {
-//     console.error("Błąd zapisu planu:", error);
-//   }
-// };
 const handleSavePlan = async () => {
-  if (planName.trim() === '' || exercises.length === 0) {
-    alert('Proszę podać nazwę planu i dodać co najmniej jedno ćwiczenie.');
+  // Filter exercises to include only those with a defined name
+  const validExercises = exercises.filter(exercise => exercise.name);
+
+  if (planName.trim() === '' || validExercises.length === 0) {
+    alert('Please provide a plan name and add at least one exercise.');
     return;
   }
 
   try {
     await firestore().collection('trainingPlans').add({
       planName,
-      exercises,
+      exercises: validExercises,
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
-    alert("Plan zapisany");
+    console.log("Plan saved");
     navigation.goBack();
   } catch (error) {
-    console.error("Błąd zapisu planu:", error);
-    alert("Błąd podczas zapisywania planu.");
+    console.error("Error saving plan:", error);
+    alert("Error while saving the plan.");
   }
 };
+
 
 
 
@@ -50,7 +36,8 @@ const CreatePlanScreen = ({ navigation, route }) => {
   const [exercises, setExercises] = useState([]);
 
   useEffect(() => {
-    if (route.params?.selectedExercise && !exercises.find(e => e.name === route.params.selectedExercise.name)) {
+    console.log('route.params', route.params);
+    if (route.params?.selectedExercise && route.params.selectedExercise.name && !exercises.find(e => e.name === route.params.selectedExercise.name)) {
       const newExercise = {
         name: route.params.selectedExercise.name,
         series: [{ reps: '', weight: '' }],
@@ -58,6 +45,8 @@ const CreatePlanScreen = ({ navigation, route }) => {
       setExercises([...exercises, newExercise]);
     }
   }, [route.params?.selectedExercise]);
+  
+  
   
 
   const addSeries = (exerciseIndex) => {
@@ -110,9 +99,13 @@ const CreatePlanScreen = ({ navigation, route }) => {
 
   const handleSavePlan = async () => {
     if (planName.trim() === '' || exercises.length === 0) {
-      alert('Proszę podać nazwę planu i dodać co najmniej jedno ćwiczenie.');
+      alert('Please provide a plan name and add at least one exercise.');
       return;
     }
+  
+    // Log the data before saving
+    console.log("Saving plan with name:", planName);
+    console.log("Exercises:", exercises);
   
     try {
       await firestore().collection('trainingPlans').add({
@@ -120,12 +113,14 @@ const CreatePlanScreen = ({ navigation, route }) => {
         exercises,
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
-      console.log("Plan zapisany");
+      console.log("Plan saved");
       navigation.goBack();
     } catch (error) {
-      console.error("Błąd zapisu planu:", error);
+      console.error("Error saving plan:", error);
+      alert("Error while saving the plan.");
     }
   };
+  
   
 
   return (
@@ -151,10 +146,11 @@ const CreatePlanScreen = ({ navigation, route }) => {
         <Text style={styles.buttonText}>Zapisz plan</Text>
       </TouchableOpacity>
       <FlatList
-        data={exercises}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderExerciseItem}
-      />
+  data={exercises}
+  keyExtractor={(item, index) => 'exercise-' + index}
+  renderItem={renderExerciseItem}
+  extraData={exercises} // Dodaj to, aby wymusić odświeżenie listy
+/>
     </View>
   );
 };
