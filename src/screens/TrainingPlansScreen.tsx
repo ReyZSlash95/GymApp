@@ -23,9 +23,32 @@ const TrainingPlansScreen = ({ navigation }) => {
         setPlans(plans);
       });
 
-    return () => subscriber();
-  }, []);
+      // return () => subscriber();
+      return (
+        <View style={styles.container}>
+          <Text style={styles.title}>Plany Treningowe</Text>
+          <FlatList
+            data={plans}
+            keyExtractor={item => item.key}
+            renderItem={({ item }) => (
+              <View>
+                <Text>{item.planName}</Text>
+                {/* Tutaj możesz dodać więcej szczegółów planu */}
+              </View>
+            )}
+          />
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('CreatePlan')}
+          >
+            <Text style={styles.buttonText}>Dodaj nowy plan</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }, []);
 };
+
+
 
 const styles = StyleSheet.create({
   container: {
