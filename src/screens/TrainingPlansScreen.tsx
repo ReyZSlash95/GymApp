@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+
 import CreatePlanForm from './CreatePlanScreen'; // Upewnij się, że ścieżka jest poprawna
 
 import firestore from '@react-native-firebase/firestore';
@@ -37,12 +38,7 @@ const TrainingPlansScreen = ({ navigation }) => {
               </View>
             )}
           />
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('CreatePlan')}
-          >
-            <Text style={styles.buttonText}>Dodaj nowy plan</Text>
-          </TouchableOpacity>
+          {/* Reszta Twojego UI */}
         </View>
       );
     }, []);
