@@ -4,6 +4,24 @@ import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList } from 'r
 import firestore from '@react-native-firebase/firestore';
 
 
+// const handleSavePlan = async () => {
+//   if (planName.trim() === '' || exercises.length === 0) {
+//     alert('Proszę podać nazwę planu i dodać co najmniej jedno ćwiczenie.');
+//     return;
+//   }
+
+//   try {
+//     await firestore().collection('trainingPlans').add({
+//       planName,
+//       exercises,
+//       createdAt: firestore.FieldValue.serverTimestamp(),
+//     });
+//     console.log("Plan zapisany");
+//     navigation.goBack();
+//   } catch (error) {
+//     console.error("Błąd zapisu planu:", error);
+//   }
+// };
 const handleSavePlan = async () => {
   if (planName.trim() === '' || exercises.length === 0) {
     alert('Proszę podać nazwę planu i dodać co najmniej jedno ćwiczenie.');
@@ -16,12 +34,14 @@ const handleSavePlan = async () => {
       exercises,
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
-    console.log("Plan zapisany");
+    alert("Plan zapisany");
     navigation.goBack();
   } catch (error) {
     console.error("Błąd zapisu planu:", error);
+    alert("Błąd podczas zapisywania planu.");
   }
 };
+
 
 
 
