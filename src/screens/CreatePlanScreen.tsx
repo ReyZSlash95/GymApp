@@ -30,22 +30,24 @@ const CreatePlanScreen = ({ navigation, route }) => {
 
   const renderSeries = (series, exerciseIndex) => {
     return series.map((serie, seriesIndex) => (
-      <View key={seriesIndex}>
+      <View key={seriesIndex} style={styles.seriesContainer}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, styles.repsInput]}
           onChangeText={(value) => handleSeriesChange(exerciseIndex, seriesIndex, 'reps', value)}
           value={serie.reps}
-          placeholder="Liczba powtórzeń"
+          placeholder="Powtórzenia"
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, styles.weightInput]}
           onChangeText={(value) => handleSeriesChange(exerciseIndex, seriesIndex, 'weight', value)}
           value={serie.weight}
-          placeholder="Ciężar (kg)"
+          placeholder="Ciężar"
         />
       </View>
     ));
   };
+  
+  
 
   const renderExerciseItem = ({ item, index }) => (
     <View style={styles.exerciseItem}>
@@ -130,6 +132,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
   },
+
+  //..
+  seriesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  repsInput: {
+    flex: 1, // Alokacja miejsca dla pola
+    marginRight: 10, // Odstęp między polami
+  },
+  weightInput: {
+    flex: 1, // Alokacja miejsca dla pola
+  },
+  
 });
 
 export default CreatePlanScreen;
