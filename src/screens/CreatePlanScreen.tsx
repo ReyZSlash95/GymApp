@@ -38,6 +38,7 @@ const CreatePlanScreen = ({ navigation, route }) => {
       setExercises([...exercises, newExercise]);
     }
   }, [route.params?.selectedExercise]);
+  
 
   const addSeries = (exerciseIndex) => {
     const newSeries = { reps: '', weight: '' };
@@ -87,11 +88,25 @@ const CreatePlanScreen = ({ navigation, route }) => {
     navigation.navigate('MuscleGroupSelection');
   };
 
-  const handleSavePlan = () => {
-    console.log("Zapisano plan:", planName);
-    // Tutaj logika zapisywania planu
-    navigation.goBack();
+  const handleSavePlan = async () => {
+    if (planName.trim() === '' || exercises.length === 0) {
+      alert('Proszę podać nazwę planu i dodać co najmniej jedno ćwiczenie.');
+      return;
+    }
+  
+    try {
+      await firestore().collection('trainingPlans').add({
+        planName,
+        exercises,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
+      console.log("Plan zapisany");
+      navigation.goBack();
+    } catch (error) {
+      console.error("Błąd zapisu planu:", error);
+    }
   };
+  
 
   return (
     <View style={styles.container}>
