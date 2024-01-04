@@ -17,11 +17,13 @@ const TrainingPlansScreen = ({ navigation }) => {
             key: documentSnapshot.id,
           });
         });
+        console.log("Pobrane plany:", plans);
         setPlans(plans);
       });
-
+  
     return () => subscriber();
   }, []);
+  
 
   return (
     <View style={styles.container}>
@@ -30,10 +32,10 @@ const TrainingPlansScreen = ({ navigation }) => {
         data={plans}
         keyExtractor={item => item.key}
         renderItem={({ item }) => (
-          <View>
-            <Text>{item.planName}</Text>
-            {/* Tutaj możesz dodać więcej szczegółów planu */}
-          </View>
+          <View style={styles.planItem}>
+          <Text style={styles.planName}>{item.planName}</Text>
+          {/* Dodatkowe szczegóły planu */}
+        </View>
         )}
       />
       <TouchableOpacity
@@ -49,18 +51,17 @@ const TrainingPlansScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0D0D0D',
+    padding: 10,
+    backgroundColor: '#0D0D0D', // Ciemne tło
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#E0E0E0',
+    color: '#E0E0E0', // Jasny tekst
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#8E44AD',
+    backgroundColor: '#8E44AD', // Fioletowy przycisk
     padding: 15,
     borderRadius: 8,
     elevation: 5,
@@ -69,11 +70,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     marginBottom: 20,
+    alignSelf: 'stretch', // Rozciągnij przycisk na szerokość kontenera
+    marginHorizontal: 16, // Dodaj marginesy poziome
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // Biały tekst
     fontSize: 18,
+    textAlign: 'center', // Wyśrodkuj tekst w przycisku
+  },
+  planItem: {
+    backgroundColor: '#FFFFFF', // Jasne tło dla elementu listy
+    padding: 15,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    borderRadius: 5,
+    flexDirection: 'row', // Elementy w linii
+    alignItems: 'center', // Wyśrodkuj elementy wertykalnie
+  },
+  planName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000', // Czarny tekst
+  },
+  exerciseText: {
+    fontSize: 16,
+    color: '#000000', // Czarny tekst
   },
 });
+
+
 
 export default TrainingPlansScreen;

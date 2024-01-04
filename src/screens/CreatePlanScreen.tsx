@@ -1,68 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList } from 'react-native';
-
 import firestore from '@react-native-firebase/firestore';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
+
+import { RootStackParamList } from './path-to-your-navigation-file';
 
 
-const handleSavePlan = async () => {
-  // Filter exercises to include only those with a defined name
-  const validExercises = exercises.filter(exercise => exercise.name);
+// Define the types for exercises and series
+interface Exercise {
+  name: string;
+  series: Series[];
+}
 
-  if (planName.trim() === '' || validExercises.length === 0) {
-    alert('Please provide a plan name and add at least one exercise.');
-    return;
-  }
+interface Series {
+  reps: string;
+  weight: string;
+}
 
-  try {
-    await firestore().collection('trainingPlans').add({
-      planName,
-      exercises: validExercises,
-      createdAt: firestore.FieldValue.serverTimestamp(),
-    });
-    console.log("Plan saved");
-    navigation.goBack();
-  } catch (error) {
-    console.error("Error saving plan:", error);
-    alert("Error while saving the plan.");
-  }
+// Define the types for the navigation and route props
+type CreatePlanScreenProps = {
+  navigation: NavigationProp<RootStackParamList, 'CreatePlanScreen'>;
+  route: RouteProp<RootStackParamList, 'CreatePlanScreen'>;
 };
 
-
-
-
-
-const CreatePlanScreen = ({ navigation, route }) => {
+const CreatePlanScreen: React.FC<CreatePlanScreenProps> = ({ navigation, route }) => {
   const [planName, setPlanName] = useState('');
-  const [exercises, setExercises] = useState([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
 
   useEffect(() => {
-    console.log('route.params', route.params);
-    if (route.params?.selectedExercise && route.params.selectedExercise.name && !exercises.find(e => e.name === route.params.selectedExercise.name)) {
+    if (route.params?.selectedExercise && !exercises.find(e => e.name === route.params.selectedExercise.name)) {
       const newExercise = {
         name: route.params.selectedExercise.name,
         series: [{ reps: '', weight: '' }],
       };
-      setExercises([...exercises, newExercise]);
+      setExercises(prevExercises => [...prevExercises, newExercise]);
     }
   }, [route.params?.selectedExercise]);
-  
-  
-  
 
-  const addSeries = (exerciseIndex) => {
+  const addSeries = (exerciseIndex: number) => {
     const newSeries = { reps: '', weight: '' };
     const updatedExercises = [...exercises];
     updatedExercises[exerciseIndex].series.push(newSeries);
     setExercises(updatedExercises);
   };
 
-  const handleSeriesChange = (exerciseIndex, seriesIndex, field, value) => {
+  const handleSeriesChange = (exerciseIndex: number, seriesIndex: number, field: 'reps' | 'weight', value: string) => {
     const updatedExercises = [...exercises];
     updatedExercises[exerciseIndex].series[seriesIndex][field] = value;
     setExercises(updatedExercises);
   };
 
-  const renderSeries = (series, exerciseIndex) => {
+  const renderSeries = (series: Series[], exerciseIndex: number) => {
     return series.map((serie, seriesIndex) => (
       <View key={seriesIndex} style={styles.seriesContainer}>
         <TextInput
@@ -80,10 +68,8 @@ const CreatePlanScreen = ({ navigation, route }) => {
       </View>
     ));
   };
-  
-  
 
-  const renderExerciseItem = ({ item, index }) => (
+  const renderExerciseItem = ({ item, index }: { item: Exercise; index: number }) => (
     <View style={styles.exerciseItem}>
       <Text style={styles.exerciseName}>{item.name}</Text>
       {renderSeries(item.series, index)}
@@ -92,7 +78,7 @@ const CreatePlanScreen = ({ navigation, route }) => {
       </TouchableOpacity>
     </View>
   );
-  
+
   const handleAddExercise = () => {
     navigation.navigate('MuscleGroupSelection');
   };
@@ -102,11 +88,7 @@ const CreatePlanScreen = ({ navigation, route }) => {
       alert('Please provide a plan name and add at least one exercise.');
       return;
     }
-  
-    // Log the data before saving
-    console.log("Saving plan with name:", planName);
-    console.log("Exercises:", exercises);
-  
+
     try {
       await firestore().collection('trainingPlans').add({
         planName,
@@ -120,8 +102,6 @@ const CreatePlanScreen = ({ navigation, route }) => {
       alert("Error while saving the plan.");
     }
   };
-  
-  
 
   return (
     <View style={styles.container}>
@@ -146,15 +126,16 @@ const CreatePlanScreen = ({ navigation, route }) => {
         <Text style={styles.buttonText}>Zapisz plan</Text>
       </TouchableOpacity>
       <FlatList
-  data={exercises}
-  keyExtractor={(item, index) => 'exercise-' + index}
-  renderItem={renderExerciseItem}
-  extraData={exercises} // Dodaj to, aby wymusić odświeżenie listy
-/>
+        data={exercises}
+        keyExtractor={(item, index) => 'exercise-' + index}
+        renderItem={renderExerciseItem}
+        extraData={exercises}
+      />
     </View>
   );
 };
 
+// Styles for the component
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -187,21 +168,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
   },
-
-  //..
   seriesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   repsInput: {
-    flex: 1, // Alokacja miejsca dla pola
-    marginRight: 10, // Odstęp między polami
+    flex: 1,
+    marginRight: 10,
   },
   weightInput: {
-    flex: 1, // Alokacja miejsca dla pola
+    flex: 1,
   },
-  
 });
 
 export default CreatePlanScreen;

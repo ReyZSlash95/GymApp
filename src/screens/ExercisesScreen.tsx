@@ -38,11 +38,12 @@ const ExercisesScreen = ({ route, navigation }) => {
     navigation.navigate('CreatePlan', { selectedExercise: exercise });
   };
   
+  
 
   const renderExerciseItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.exerciseButton} 
-      onPress={() => handleAddExercise(item.name)}
+      onPress={() => handleAddExercise(item)}
     >
       <Image source={item.image} style={styles.exerciseImage} />
       <Text style={styles.exerciseText}>{item.name}</Text>
