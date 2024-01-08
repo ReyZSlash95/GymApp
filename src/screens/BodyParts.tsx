@@ -22,8 +22,6 @@ const BodyParts = () => {
     </TouchableOpacity>
   );
 
-
-  
   return (
     <View style={{ flex: 1 }}>
       <Text>Wybierz Partie</Text>

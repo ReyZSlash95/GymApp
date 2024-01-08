@@ -1,35 +1,32 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native';
-
-import FastImage from 'react-native-fast-image'
-
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { useDispatch } from 'react-redux';
+import { addExercise } from '../../redux/actions/exerciseActions';
 
 const exercises = [
-  { id: '1', name: 'Push-up', image: require('../../img/exercises/klatka/PushUp.gif') },
-  { id: '2', name: 'Pike Push-up', image: require('../../img/exercises/klatka/PikePushUp.gif') },
-  { id: '3', name: 'Decline Chest Press Machine', image: require('../../img/exercises/klatka/DeclineChestPressMachine.gif') },
-  { id: '4', name: 'Chest Dips', image: require('../../img/exercises/klatka/ChestDips.gif') },
-
-
+  { id: '1', name: 'Push-up', series: [{ reps: '', weight: '' }], image: require('../../img/exercises/klatka/PushUp.gif') },
+  { id: '2', name: 'Pike Push-up', series: [{ reps: '', weight: '' }], image: require('../../img/exercises/klatka/PikePushUp.gif') },
+  { id: '3', name: 'Decline Chest Press Machine', series: [{ reps: '', weight: '' }], image: require('../../img/exercises/klatka/DeclineChestPressMachine.gif') },
+  { id: '4', name: 'Chest Dips', series: [{ reps: '', weight: '' }], image: require('../../img/exercises/klatka/ChestDips.gif') },
   // Add more exercises here
 ];
 
-
-
-import { useNavigation } from '@react-navigation/native'; // Dodaj ten import
+import { useNavigation } from '@react-navigation/native';
 
 const ExerciseScreen1 = () => {
-  const navigation = useNavigation(); // Użyj hooka useNavigation
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   const handlePress = (exercise) => {
-    console.log(`Dodano ćwiczenie: ${exercise.name}`);
-    navigation.navigate('NewPlan', { exercise }); // Dodaj nawigację do NewPlan
+    dispatch(addExercise(exercise));
+    navigation.navigate('NewPlan');
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handlePress(item)}>
-      <Text>{item.name}</Text>
+    <TouchableOpacity style={styles.button} onPress={() => handlePress(item)}>
       <FastImage source={item.image} style={styles.image} />
+      <Text>{item.name}</Text>
     </TouchableOpacity>
   );
 
@@ -38,12 +35,7 @@ const ExerciseScreen1 = () => {
       <FlatList
         data={exercises}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.button} onPress={() => handlePress(item)}>
-            <FastImage source={item.image} style={styles.image} />
-            <Text>{item.name}</Text>
-          </TouchableOpacity>
-        )}
+        renderItem={renderItem}
       />
     </View>
   );

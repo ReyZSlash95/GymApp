@@ -4,6 +4,10 @@ import { Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+
+import { Provider } from 'react-redux'; // Dodaj ten import
+import store from './src/redux/store/configureStore';
+
 import Plans from './src/screens/Plans';
 import NewPlan from './src/screens/NewPlan';
 import BodyParts from './src/screens/BodyParts';
@@ -47,8 +51,8 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 // Create the stack navigator
 const PlansStack = createStackNavigator<PlansStackParamList>();
 
+
 // App.tsx
-// Rest of your code
 
 const PlansNavigator = () => {
   return (
@@ -71,29 +75,31 @@ const PlansNavigator = () => {
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen
-        name="Plans"
-        component={PlansNavigator}
-        listeners={({ navigation }) => ({
-          tabPress: e => {
-            // Prevent default action
-            e.preventDefault();
+    <Provider store={store}>
+      <NavigationContainer>
+        <Tab.Navigator screenOptions={{ headerShown: false }}>
+        <Tab.Screen
+          name="Plans"
+          component={PlansNavigator}
+          listeners={({ navigation }) => ({
+            tabPress: e => {
+              // Prevent default action
+              e.preventDefault();
 
-            // Reset the history stack and navigate to PlansHome
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Plans' }],
-            });
-          },
-        })}
-      />
-        <Tab.Screen name="History" component={History} />
-        <Tab.Screen name="Exercises" component={Exercises} />
-        <Tab.Screen name="More" component={More} />
-      </Tab.Navigator>
-    </NavigationContainer>
+              // Reset the history stack and navigate to PlansHome
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Plans' }],
+              });
+            },
+          })}
+        />
+          <Tab.Screen name="History" component={History} />
+          <Tab.Screen name="Exercises" component={Exercises} />
+          <Tab.Screen name="More" component={More} />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </Provider> 
   );
 };
 

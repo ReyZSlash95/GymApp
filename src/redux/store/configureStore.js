@@ -1,0 +1,11 @@
+// src/store/configureStore.js
+
+import { configureStore } from '@reduxjs/toolkit';
+import rootReducer from '../reducers'; // Upewnij się, że ścieżka do rootReducer jest poprawna
+
+const store = configureStore({
+    reducer: rootReducer,
+    devTools: process.env.NODE_ENV !== 'production',
+  });
+
+export default store;
