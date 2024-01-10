@@ -1,39 +1,25 @@
 // App.tsx
-import React from 'react';
-import { Button } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import React, {useEffect, useRef} from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
 
-import { Provider } from 'react-redux'; // Dodaj ten import
+import {Provider} from 'react-redux';
 import store from './src/redux/store/configureStore';
 
-import Plans from './src/screens/Plans';
 import NewPlan from './src/screens/NewPlan';
 import BodyParts from './src/screens/BodyParts';
-import History from './src/screens/History';
-import Exercises from './src/screens/Exercises';
-import More from './src/screens/More';
 
-import ExerciseScreen1 from './src/screens/exerciseList/ExerciseScreen1'; // Add this line
-import ExerciseScreen2 from './src/screens/exerciseList/ExerciseScreen2'; // Add this line
-import ExerciseScreen3 from './src/screens/exerciseList/ExerciseScreen3'; // Add this line
-import ExerciseScreen4 from './src/screens/exerciseList/ExerciseScreen4'; // Add this line
-import ExerciseScreen6 from './src/screens/exerciseList/ExerciseScreen6'; // Add this line
-import ExerciseScreen7 from './src/screens/exerciseList/ExerciseScreen7'; // Add this line
+import ExerciseScreen1 from './src/screens/exerciseList/ExerciseScreen1';
+import ExerciseScreen2 from './src/screens/exerciseList/ExerciseScreen2';
+import ExerciseScreen3 from './src/screens/exerciseList/ExerciseScreen3';
+import ExerciseScreen4 from './src/screens/exerciseList/ExerciseScreen4';
+import ExerciseScreen6 from './src/screens/exerciseList/ExerciseScreen6';
+import ExerciseScreen7 from './src/screens/exerciseList/ExerciseScreen7';
 
-
-// Define your navigation parameters
-type BottomTabParamList = {
-  Plans: undefined;
-  History: undefined;
-  Exercises: undefined;
-  More: undefined;
-
-};
+import HomeTabs from './src/MenuTab/BottomTabNavigator';
 
 type PlansStackParamList = {
-  PlansHome: undefined;
+  HomeTabs: undefined;
   NewPlan: undefined;
   BodyParts: undefined;
   ExerciseScreen1: undefined;
@@ -42,64 +28,49 @@ type PlansStackParamList = {
   ExerciseScreen4: undefined;
   ExerciseScreen6: undefined;
   ExerciseScreen7: undefined;
-
 };
 
-// Create the bottom tab navigator
-const Tab = createBottomTabNavigator<BottomTabParamList>();
-
-// Create the stack navigator
 const PlansStack = createStackNavigator<PlansStackParamList>();
-
-
-// App.tsx
-
-const PlansNavigator = () => {
-  return (
-    <PlansStack.Navigator>
-      <PlansStack.Screen name="PlansHome" component={Plans} />
-      <PlansStack.Screen name="NewPlan" component={NewPlan} />
-      <PlansStack.Screen name="BodyParts" component={BodyParts} />
-      <PlansStack.Screen name="ExerciseScreen1" component={ExerciseScreen1} />
-      <PlansStack.Screen name="ExerciseScreen2" component={ExerciseScreen2} />
-      <PlansStack.Screen name="ExerciseScreen3" component={ExerciseScreen3} />
-      <PlansStack.Screen name="ExerciseScreen4" component={ExerciseScreen4} />
-      <PlansStack.Screen name="ExerciseScreen6" component={ExerciseScreen6} />
-      <PlansStack.Screen name="ExerciseScreen7" component={ExerciseScreen7} />
-    </PlansStack.Navigator>
-  );
-};
-
-// Rest of your code
-
 
 const App = () => {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-        <Tab.Screen
-          name="Plans"
-          component={PlansNavigator}
-          listeners={({ navigation }) => ({
-            tabPress: e => {
-              // Prevent default action
-              e.preventDefault();
-
-              // Reset the history stack and navigate to PlansHome
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Plans' }],
-              });
-            },
-          })}
-        />
-          <Tab.Screen name="History" component={History} />
-          <Tab.Screen name="Exercises" component={Exercises} />
-          <Tab.Screen name="More" component={More} />
-        </Tab.Navigator>
+        <PlansStack.Navigator>
+          <PlansStack.Screen
+            name="HomeTabs"
+            component={HomeTabs}
+            options={{headerShown: false}}
+          />
+          <PlansStack.Screen name="NewPlan" component={NewPlan} />
+          <PlansStack.Screen name="BodyParts" component={BodyParts} />
+          <PlansStack.Screen
+            name="ExerciseScreen1"
+            component={ExerciseScreen1}
+          />
+          <PlansStack.Screen
+            name="ExerciseScreen2"
+            component={ExerciseScreen2}
+          />
+          <PlansStack.Screen
+            name="ExerciseScreen3"
+            component={ExerciseScreen3}
+          />
+          <PlansStack.Screen
+            name="ExerciseScreen4"
+            component={ExerciseScreen4}
+          />
+          <PlansStack.Screen
+            name="ExerciseScreen6"
+            component={ExerciseScreen6}
+          />
+          <PlansStack.Screen
+            name="ExerciseScreen7"
+            component={ExerciseScreen7}
+          />
+        </PlansStack.Navigator>
       </NavigationContainer>
-    </Provider> 
+    </Provider>
   );
 };
 

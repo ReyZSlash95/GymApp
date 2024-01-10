@@ -5,7 +5,7 @@ import '@react-native-firebase/firestore';
 // Konfiguracja Firebase, jeśli jest potrzebna
 
 // Włącz buforowanie danych offline
-firebase.firestore().settings({ persistence: true });
+firebase.firestore().settings({persistence: true});
 
 // Eksportuj skonfigurowaną instancję firebase
 export default firebase;

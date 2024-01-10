@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Button, Alert} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Button,
+  Alert,
+} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import { useNavigation } from '@react-navigation/native';
-
+import {useNavigation} from '@react-navigation/native';
 
 const Plans = () => {
   const [plans, setPlans] = useState([]);
@@ -12,21 +19,24 @@ const Plans = () => {
   useEffect(() => {
     const subscriber = firestore()
       .collection('trainingPlans')
-      .onSnapshot(querySnapshot => {
-        const plansArray = [];
+      .onSnapshot(
+        querySnapshot => {
+          const plansArray = [];
 
-        querySnapshot.forEach(documentSnapshot => {
-          plansArray.push({
-            ...documentSnapshot.data(),
-            key: documentSnapshot.id,
+          querySnapshot.forEach(documentSnapshot => {
+            plansArray.push({
+              ...documentSnapshot.data(),
+              key: documentSnapshot.id,
+            });
           });
-        });
 
-        setPlans(plansArray);
-      }, error => {
-        // Obsługa błędów
-        console.error(error);
-      });
+          setPlans(plansArray);
+        },
+        error => {
+          // Obsługa błędów
+          console.error(error);
+        },
+      );
 
     navigation.setOptions({
       headerRight: () => (
@@ -41,22 +51,24 @@ const Plans = () => {
     return () => subscriber();
   }, [navigation]);
 
-  const handleExpand = (planId) => {
+  const handleExpand = planId => {
     setExpandedPlanId(expandedPlanId === planId ? null : planId); // Rozwijanie/zwijanie planu
   };
 
-  const handleStartTraining = (planId) => {
+  const handleStartTraining = planId => {
     // Logika nawigacji do ekranu treningu
-    navigation.navigate('TrainingScreen', { planId });
+    navigation.navigate('TrainingScreen', {planId});
   };
 
-  const renderSeriesDetails = (series) => {
+  const renderSeriesDetails = series => {
     return series.map((serie, index) => (
-      <Text key={index}>Seria {index + 1}: {serie.reps} powtórzeń, {serie.weight} kg</Text>
+      <Text key={index}>
+        Seria {index + 1}: {serie.reps} powtórzeń, {serie.weight} kg
+      </Text>
     ));
   };
-  
-  const renderExerciseList = (exercises) => {
+
+  const renderExerciseList = exercises => {
     return exercises.map((exercise, index) => (
       <View key={index} style={styles.exerciseItem}>
         <Text style={styles.exerciseName}>{exercise.name}</Text>
@@ -64,34 +76,29 @@ const Plans = () => {
       </View>
     ));
   };
-  
 
-  const handleDeletePlan = (planId) => {
-    Alert.alert(
-      "Potwierdzenie",
-      "Czy na pewno chcesz usunąć ten plan?",
-      [
-        {
-          text: "Anuluj",
-          onPress: () => console.log("Usuwanie anulowane"),
-          style: "cancel"
-        },
-        { text: "Usuń", onPress: () => handleDeletePlanConfirmed(planId) } // Zmienione z deletePlan na handleDeletePlanConfirmed
-      ]
-    );
+  const handleDeletePlan = planId => {
+    Alert.alert('Potwierdzenie', 'Czy na pewno chcesz usunąć ten plan?', [
+      {
+        text: 'Anuluj',
+        onPress: () => console.log('Usuwanie anulowane'),
+        style: 'cancel',
+      },
+      {text: 'Usuń', onPress: () => handleDeletePlanConfirmed(planId)}, // Zmienione z deletePlan na handleDeletePlanConfirmed
+    ]);
   };
-  
-  const handleDeletePlanConfirmed = async (planId) => {
+
+  const handleDeletePlanConfirmed = async planId => {
     try {
       await firestore().collection('trainingPlans').doc(planId).delete();
-      Alert.alert("Sukces", "Plan został usunięty.");
+      Alert.alert('Sukces', 'Plan został usunięty.');
     } catch (error) {
-      console.error("Error deleting plan:", error);
-      Alert.alert("Błąd", "Wystąpił błąd podczas usuwania planu.");
+      console.error('Error deleting plan:', error);
+      Alert.alert('Błąd', 'Wystąpił błąd podczas usuwania planu.');
     }
-  };  
-  
-  const renderPlanDetails = (plan) => {
+  };
+
+  const renderPlanDetails = plan => {
     if (expandedPlanId === plan.key) {
       return (
         <View>
@@ -114,7 +121,7 @@ const Plans = () => {
     <View style={styles.container}>
       <FlatList
         data={plans}
-        renderItem={({ item }) => (
+        renderItem={({item}) => (
           <View style={styles.planItem}>
             <TouchableOpacity onPress={() => handleExpand(item.key)}>
               <View style={styles.planItemRow}>
@@ -144,12 +151,12 @@ const styles = StyleSheet.create({
   planItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between' // Dostosuj według potrzeb
+    justifyContent: 'space-between', // Dostosuj według potrzeb
   },
   planName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 10 // Dostosuj według potrzeb
+    marginRight: 10, // Dostosuj według potrzeb
   },
   exerciseItem: {
     paddingLeft: 20,
