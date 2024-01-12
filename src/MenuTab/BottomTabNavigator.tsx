@@ -22,12 +22,12 @@ const TabBarIcon = props => {
   const {icon, onPress, accessibilityState} = props;
   const focused = accessibilityState.selected;
   const viewRef = useRef(null);
-  const color = focused ? '#202c3d' : '#e4b04e';
+  const color = focused ? '#00B37E' : '#e4b04e';
 
   useEffect(() => {
     if (focused) {
       viewRef.current.animate({
-        0: {scale: 0.5, rotate: '0deg'},
+        0: {scale: 0.8, rotate: '0deg'},
         1: {scale: 1.5, rotate: '360deg'},
       });
     } else {
@@ -45,7 +45,7 @@ const TabBarIcon = props => {
       style={styles.container}>
       <Animatable.View
         ref={viewRef}
-        duration={1000}
+        duration={400}
         style={{justifyContent: 'center', alignItems: 'center'}}>
         <FontAwesomeIcon icon={icon} size={24} color={color} />
       </Animatable.View>
@@ -59,13 +59,17 @@ const HomeTabs = () => {
       screenOptions={{
         tabBarStyle: {
           height: 60,
-          backgroundColor: '#488992',
+          backgroundColor: '#202024',
           // position: 'center',
           // bottom: 16,
           // right: 16,
           // left: 16,
           // borderRadius: 50,
         },
+        headerStyle: {
+          backgroundColor: '#202024',
+        },
+        headerTintColor: '#00B37E',
       }}>
       <Tab.Screen
         name="Plans"

@@ -20,6 +20,23 @@ const exerciseReducer = (state = initialState, action) => {
           exercise => exercise.id !== action.payload,
         ),
       };
+
+    case 'REPLACE_EXERCISE':
+      console.log(
+        'oldExerciseId:',
+        action.payload.oldExerciseId,
+        'newExercise:',
+        action.payload.newExercise,
+      );
+      return {
+        ...state,
+        selectedExercises: state.selectedExercises.map(exercise =>
+          exercise.id === action.payload.oldExerciseId
+            ? {...action.payload.newExercise, id: exercise.id} // Zachowaj oryginalne ID
+            : exercise,
+        ),
+      };
+
     case 'SAVE_PLAN':
       return {
         ...state,

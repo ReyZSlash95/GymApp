@@ -40,11 +40,13 @@ const Plans = () => {
 
     navigation.setOptions({
       headerRight: () => (
-        <Button
-          onPress={() => navigation.navigate('NewPlan')}
-          title="Stwórz plan"
-          color="#000"
-        />
+        <TouchableOpacity style={{margin: 10}}>
+          <Button
+            onPress={() => navigation.navigate('NewPlan')}
+            title="Stwórz plan"
+            color="#121214"
+          />
+        </TouchableOpacity>
       ),
     });
 
@@ -140,23 +142,29 @@ const Plans = () => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#121214',
     flex: 1,
     padding: 10,
   },
   planItem: {
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    // borderWidth: 1,
+    // borderBottomColor: '#ddd',
+    backgroundColor: '#29292E',
+    // borderColor: '#29292E',
+    borderRadius: 3,
+    margin: 5,
   },
   planItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', // Dostosuj według potrzeb
+    justifyContent: 'space-between',
   },
   planName: {
-    fontSize: 18,
+    color: 'white',
+    fontSize: 14,
     fontWeight: 'bold',
-    marginRight: 10, // Dostosuj według potrzeb
+    marginLeft: 10,
   },
   exerciseItem: {
     paddingLeft: 20,
@@ -171,8 +179,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: 'red',
   },
-  // D
-  // Dodaj więcej stylów według potrzeb
 });
 
 export default Plans;

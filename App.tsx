@@ -17,6 +17,9 @@ import ExerciseScreen6 from './src/screens/exerciseList/ExerciseScreen6';
 import ExerciseScreen7 from './src/screens/exerciseList/ExerciseScreen7';
 
 import HomeTabs from './src/MenuTab/BottomTabNavigator';
+import {Provider as PaperProvider} from 'react-native-paper';
+
+import {StyleSheet} from 'react-native';
 
 type PlansStackParamList = {
   HomeTabs: undefined;
@@ -35,41 +38,53 @@ const PlansStack = createStackNavigator<PlansStackParamList>();
 const App = () => {
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <PlansStack.Navigator>
-          <PlansStack.Screen
-            name="HomeTabs"
-            component={HomeTabs}
-            options={{headerShown: false}}
-          />
-          <PlansStack.Screen name="NewPlan" component={NewPlan} />
-          <PlansStack.Screen name="BodyParts" component={BodyParts} />
-          <PlansStack.Screen
-            name="ExerciseScreen1"
-            component={ExerciseScreen1}
-          />
-          <PlansStack.Screen
-            name="ExerciseScreen2"
-            component={ExerciseScreen2}
-          />
-          <PlansStack.Screen
-            name="ExerciseScreen3"
-            component={ExerciseScreen3}
-          />
-          <PlansStack.Screen
-            name="ExerciseScreen4"
-            component={ExerciseScreen4}
-          />
-          <PlansStack.Screen
-            name="ExerciseScreen6"
-            component={ExerciseScreen6}
-          />
-          <PlansStack.Screen
-            name="ExerciseScreen7"
-            component={ExerciseScreen7}
-          />
-        </PlansStack.Navigator>
-      </NavigationContainer>
+      <PaperProvider>
+        <NavigationContainer>
+          <PlansStack.Navigator
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#202024',
+              },
+              headerTintColor: '#00B37E',
+              headerTitleStyle: {
+                color: '#00B37E',
+                fontWeight: 'bold',
+              },
+            }}>
+            <PlansStack.Screen
+              name="HomeTabs"
+              component={HomeTabs}
+              options={{headerShown: false}}
+            />
+            <PlansStack.Screen name="NewPlan" component={NewPlan} />
+            <PlansStack.Screen name="BodyParts" component={BodyParts} />
+            <PlansStack.Screen
+              name="ExerciseScreen1"
+              component={ExerciseScreen1}
+            />
+            <PlansStack.Screen
+              name="ExerciseScreen2"
+              component={ExerciseScreen2}
+            />
+            <PlansStack.Screen
+              name="ExerciseScreen3"
+              component={ExerciseScreen3}
+            />
+            <PlansStack.Screen
+              name="ExerciseScreen4"
+              component={ExerciseScreen4}
+            />
+            <PlansStack.Screen
+              name="ExerciseScreen6"
+              component={ExerciseScreen6}
+            />
+            <PlansStack.Screen
+              name="ExerciseScreen7"
+              component={ExerciseScreen7}
+            />
+          </PlansStack.Navigator>
+        </NavigationContainer>
+      </PaperProvider>
     </Provider>
   );
 };

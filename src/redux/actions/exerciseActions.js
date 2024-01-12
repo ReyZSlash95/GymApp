@@ -10,6 +10,11 @@ export const removeExercise = exerciseId => ({
   payload: exerciseId,
 });
 
+export const replaceExercise = (oldExerciseId, newExercise) => ({
+  type: 'REPLACE_EXERCISE',
+  payload: {oldExerciseId, newExercise},
+});
+
 export const savePlan = exercises => ({
   type: 'SAVE_PLAN',
   payload: exercises,
