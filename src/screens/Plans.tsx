@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {
+  Animated,
   View,
   Text,
   FlatList,
@@ -8,8 +9,13 @@ import {
   Button,
   Alert,
 } from 'react-native';
+
+import DraggableFlatList from 'react-native-draggable-flatlist';
+
 import firestore from '@react-native-firebase/firestore';
 import {useNavigation} from '@react-navigation/native';
+
+import FastImage from 'react-native-fast-image';
 
 const Plans = () => {
   const [plans, setPlans] = useState([]);
@@ -19,21 +25,19 @@ const Plans = () => {
   useEffect(() => {
     const subscriber = firestore()
       .collection('trainingPlans')
+      .orderBy('order')
       .onSnapshot(
         querySnapshot => {
           const plansArray = [];
-
           querySnapshot.forEach(documentSnapshot => {
             plansArray.push({
               ...documentSnapshot.data(),
               key: documentSnapshot.id,
             });
           });
-
           setPlans(plansArray);
         },
         error => {
-          // Obsługa błędów
           console.error(error);
         },
       );
@@ -58,25 +62,10 @@ const Plans = () => {
   };
 
   const handleStartTraining = planId => {
-    // Logika nawigacji do ekranu treningu
-    navigation.navigate('TrainingScreen', {planId});
-  };
-
-  const renderSeriesDetails = series => {
-    return series.map((serie, index) => (
-      <Text key={index}>
-        Seria {index + 1}: {serie.reps} powtórzeń, {serie.weight} kg
-      </Text>
-    ));
-  };
-
-  const renderExerciseList = exercises => {
-    return exercises.map((exercise, index) => (
-      <View key={index} style={styles.exerciseItem}>
-        <Text style={styles.exerciseName}>{exercise.name}</Text>
-        {renderSeriesDetails(exercise.series)}
-      </View>
-    ));
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Training', params: {planId: planId}}],
+    });
   };
 
   const handleDeletePlan = planId => {
@@ -100,47 +89,127 @@ const Plans = () => {
     }
   };
 
+  const renderSeriesDetails = series => {
+    return series.map((serie, index) => (
+      <Text key={index}>
+        Seria {index + 1}: {serie.reps} powtórzeń, {serie.weight} kg
+      </Text>
+    ));
+  };
+
+  const renderExerciseList = exercises => {
+    return exercises.map((exercise, index) => (
+      <View key={index} style={styles.exerciseItem}>
+        <FastImage source={exercise.image} style={styles.image} />
+
+        <Text style={styles.exerciseName}>{exercise.name}</Text>
+        {/* {renderSeriesDetails(exercise.series)} */}
+      </View>
+    ));
+  };
+
   const renderPlanDetails = plan => {
-    if (expandedPlanId === plan.key) {
-      return (
-        <View>
-          {renderExerciseList(plan.exercises)}
-          <TouchableOpacity onPress={() => handleStartTraining(plan.key)}>
-            <Text style={styles.startTrainingButton}>Rozpocznij trening</Text>
-          </TouchableOpacity>
-          <Button
-            title="Usuń plan"
-            onPress={() => handleDeletePlan(plan.key)}
-            color="red"
-          />
-        </View>
-      );
-    }
-    return null;
+    const isExpanded = expandedPlanId === plan.key;
+
+    return (
+      <View style={styles.detailContainer}>
+        <TouchableOpacity onPress={() => handleExpand(plan.key)}>
+          <View style={styles.planItem}>
+            <Text style={styles.planName}>{plan.planName}</Text>
+          </View>
+        </TouchableOpacity>
+        {isExpanded && (
+          <>
+            {renderExerciseList(plan.exercises)}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                onPress={() => handleDeletePlan(plan.key)}
+                style={styles.deleteButton}>
+                <Text style={styles.deleteButtonText}>Usuń Plan</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleStartTraining(plan.key)}
+                style={styles.startTrainingButton}>
+                <Text style={styles.startTrainingButtonText}>
+                  Rozpocznij trening
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </View>
+    );
+  };
+
+  const onDragEnd = async ({data}) => {
+    setPlans(data); // Aktualizacja stanu lokalnego
+
+    // Przejście przez każdy plan i aktualizacja jego kolejności w bazie danych
+    const batch = firestore().batch();
+    data.forEach((plan, index) => {
+      const planRef = firestore().collection('trainingPlans').doc(plan.key);
+      batch.update(planRef, {order: index});
+    });
+
+    await batch.commit();
+  };
+
+  const renderItem = ({item, drag, isActive}) => {
+    return (
+      <View style={styles.detailContainer}>
+        <TouchableOpacity
+          onLongPress={drag}
+          delayLongPress={500}
+          onPress={() => handleExpand(item.key)}>
+          <View
+            style={[styles.planItem, isActive ? styles.activeItemStyle : null]}>
+            <Text style={styles.planName}>{item.planName}</Text>
+          </View>
+          {expandedPlanId === item.key && (
+            // Renderowanie szczegółów planu, jeśli jest rozwinięty
+            <>
+              {renderExerciseList(item.exercises)}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  onPress={() => handleDeletePlan(item.key)}
+                  style={styles.deleteButton}>
+                  <Text style={styles.deleteButtonText}>Usuń Plan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleStartTraining(item.key)}
+                  style={styles.startTrainingButton}>
+                  <Text style={styles.startTrainingButtonText}>
+                    Rozpocznij trening
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
-      <FlatList
+      <DraggableFlatList
         data={plans}
-        renderItem={({item}) => (
-          <View style={styles.planItem}>
-            <TouchableOpacity onPress={() => handleExpand(item.key)}>
-              <View style={styles.planItemRow}>
-                <Text style={styles.planName}>{item.planName}</Text>
-                {/* Tutaj możesz dodać kolejne elementy tekstowe lub przyciski obok nazwy planu */}
-              </View>
-            </TouchableOpacity>
-            {renderPlanDetails(item)}
-          </View>
-        )}
+        renderItem={renderItem}
         keyExtractor={item => item.key}
+        onDragEnd={onDragEnd}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  detailContainer: {
+    backgroundColor: '#e4b04e',
+    borderRadius: 3,
+    margin: 5,
+    // padding: 1,
+  },
+
   container: {
     backgroundColor: '#121214',
     flex: 1,
@@ -148,12 +217,14 @@ const styles = StyleSheet.create({
   },
   planItem: {
     padding: 10,
-    // borderWidth: 1,
-    // borderBottomColor: '#ddd',
     backgroundColor: '#29292E',
-    // borderColor: '#29292E',
     borderRadius: 3,
-    margin: 5,
+    // margin: 5,
+  },
+  activeItemStyle: {
+    // Styl dla aktywnego przeciąganego elementu, na przykład:
+    borderColor: '#e4b04e',
+    borderWidth: 2,
   },
   planItemRow: {
     flexDirection: 'row',
@@ -166,18 +237,66 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 10,
   },
-  exerciseItem: {
-    paddingLeft: 20,
-    paddingTop: 5,
-  },
-  startTrainingButton: {
-    marginTop: 10,
-    color: 'blue',
+
+  exerciseName: {
+    color: '#121214',
+    fontSize: 16,
     fontWeight: 'bold',
+    marginBottom: 10,
   },
+
+  exerciseItem: {
+    backgroundColor: 'white',
+    flexDirection: 'column',
+    flexDirection: 'row',
+    alignItems: 'center',
+    // justifyContent: 'flex-start',
+    // alignItems: 'center',
+    // paddingLeft: 20,
+    borderRadius: 3,
+    margin: 3,
+  },
+
+  buttonContainer: {
+    flexDirection: 'row', // Ustawia przyciski w jednym rzędzie
+    justifyContent: 'space-between', // Rozdziela przyciski na obie strony
+    margin: 10, // Zewnętrzny margines kontenera przycisków
+  },
+
+  startTrainingButton: {
+    backgroundColor: '#202024', // Kolor tła przycisku
+    padding: 10, // Wewnętrzne marginesy przycisku
+    borderRadius: 5, // Zaokrąglenie krawędzi przycisku
+    alignItems: 'center', // Wyśrodkowanie tekstu w przycisku
+  },
+
+  startTrainingButtonText: {
+    color: '#00B37E', // Kolor tekstu
+    fontWeight: 'bold', // Pogrubienie tekstu
+  },
+
   deleteButton: {
-    marginTop: 10,
-    color: 'red',
+    backgroundColor: '#202024', // Kolor tła przycisku
+    padding: 10, // Wewnętrzne marginesy przycisku
+    borderRadius: 5, // Zaokrąglenie krawędzi przycisku
+    alignItems: 'center', // Wyśrodkowanie tekstu w przycisku
+  },
+
+  deleteButtonText: {
+    color: '#00B37E', // Kolor tekstu
+    fontWeight: 'bold', // Pogrubienie tekstu
+  },
+
+  image: {
+    width: 34,
+    height: 34,
+    marginRight: 6,
+    marginLeft: 6,
+    marginTop: 1,
+    marginBottom: 1,
+    borderRadius: 3,
+    // borderColor: '#e4b04e',
+    // borderWidth: 2,
   },
 });
 

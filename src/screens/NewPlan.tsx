@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import LinearGradient from 'react-native-linear-gradient';
 import {
   Button,
   View,
@@ -30,9 +29,7 @@ import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {useSelector, useDispatch} from 'react-redux';
 import FastImage from 'react-native-fast-image';
 import {
-  addExercise,
   removeExercise,
-  replaceExercise,
   savePlan,
   resetPlan,
   addSeriesToExercise,
@@ -159,30 +156,43 @@ const NewPlan = () => {
       return;
     }
 
-    dispatch(savePlan(selectedExercises));
+    // Pobieranie aktualnej liczby planów dla określenia nowej wartości 'order'
+    const plansCount = await firestore()
+      .collection('trainingPlans')
+      .get()
+      .then(querySnapshot => querySnapshot.size);
 
-    try {
-      await firestore().collection('trainingPlans').add({
+    firestore()
+      .collection('trainingPlans')
+      .add({
         planName,
         exercises: selectedExercises,
+        order: plansCount, // Dodanie pola 'order'
         createdAt: firestore.FieldValue.serverTimestamp(),
+      })
+      .then(() => {
+        Alert.alert('Sukces', 'Plan został zapisany.');
+      })
+      .catch(error => {
+        console.error('Error saving plan:', error);
+        Alert.alert('Błąd', 'Wystąpił błąd podczas zapisywania planu.');
       });
-      Alert.alert('Sukces', 'Plan został zapisany.');
-      // setPlanName(''); // Resetuje pole nazwy treningu
-      dispatch(resetPlan());
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error saving plan:', error);
-      Alert.alert('Błąd', 'Wystąpił błąd podczas zapisywania planu.');
-    }
+
+    // setPlanName(''); // Resetuje pole nazwy treningu
+    Alert.alert('Sukces', 'Plan został zapisany.');
+    dispatch(resetPlan());
+    navigation.goBack();
   };
 
   const handleRemoveLastSeries = exerciseId => {
     dispatch(removeLastSeriesFromExercise(exerciseId));
   };
 
-  const renderExerciseItem = ({item}) => (
+  const renderExerciseItem = ({item, index}) => (
     <View style={styles.exerciseItem}>
+      {/* Wyświetlanie numeracji */}
+      <Text>Ćwiczenie: {index + 1}</Text>
+      {/* Reszta kodu do wyświetlania ćwiczenia */}
       <View style={styles.exerciseInfoContainer}>
         <FastImage source={item.image} style={styles.image} />
         <Text style={styles.exerciseName}>{item.name}</Text>
@@ -191,7 +201,7 @@ const NewPlan = () => {
           <DropDown
             data={data}
             onRemoveExercise={() => handleRemoveExercise(item.id)}
-            exerciseId={item.id}
+            exerciseIndex={index}
           />
         </View>
       </View>
@@ -250,14 +260,14 @@ const NewPlan = () => {
   return (
     <View style={styles.container}>
       <TextInput
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
         caretHidden={true}
         value={planName}
         underlineColorAndroid={'transparent'}
         onChangeText={handlePlanNameChange}
         placeholder="Podaj nazwe planu"
         placeholderTextColor="#C4C4CC"
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         style={[
           styles.planNameInput,
           {

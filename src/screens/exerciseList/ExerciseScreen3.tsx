@@ -9,34 +9,80 @@ import styles from '../../styles/ExerciseScreenStyles';
 const exercises = [
   {
     id: '1',
-    name: 'Push-up',
+    name: 'Asisted Triceps Dips',
+    type: 'triceps',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/PushUp.gif'),
+    image: require('../../img/exercises/triceps/AsistedTricepsDips.gif'),
   },
   {
     id: '2',
-    name: 'Pike Push-up',
+    name: 'Barbell Triceps Dips',
+    type: 'triceps',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/PikePushUp.gif'),
+    image: require('../../img/exercises/triceps/BarbellTricepsExtension.gif'),
   },
   {
     id: '3',
-    name: 'Decline Chest Press Machine',
+    name: 'Cable Concentration Extension On Knee',
+    type: 'triceps',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/DeclineChestPressMachine.gif'),
+    image: require('../../img/exercises/triceps/CableConcentrationExtensiononknee.gif'),
   },
   {
     id: '4',
-    name: 'Chest Dips',
+    name: 'Cable Rear Drive',
+    type: 'triceps',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/ChestDips.gif'),
+    image: require('../../img/exercises/triceps/CableRearDrive.gif'),
+  },
+  {
+    id: '5',
+    name: 'Cable Rope Overhead Triceps Extension',
+    type: 'triceps',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/triceps/CableRopeOverheadTricepsExtension.gif'),
+  },
+  {
+    id: '6',
+    name: 'Dumbbell Kickback',
+    type: 'triceps',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/triceps/DumbbellKickback.gif'),
+  },
+  {
+    id: '7',
+    name: 'High Pulleyy Overhead Tricep Extension',
+    type: 'triceps',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/triceps/HighPulleyOverheadTricepExtension.gif'),
+  },
+  {
+    id: '8',
+    name: 'Lever Overhand Triceps Dip',
+    type: 'triceps',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/triceps/LeverOverhandTricepsDip.gif'),
+  },
+  {
+    id: '9',
+    name: 'Push Down',
+    type: 'triceps',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/triceps/Pushdown.gif'),
+  },
+  {
+    id: '10',
+    name: 'Seated EZ Bar Overhead Triceps Extension',
+    type: 'triceps',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/triceps/SeatedEZBarOverheadTricepsExtension.gif'),
   },
   // Add more exercises here
 ];
 
 import {useNavigation} from '@react-navigation/native';
 
-const ExerciseScreen3 = () => {
+const Triceps = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -64,4 +110,4 @@ const ExerciseScreen3 = () => {
   );
 };
 
-export default ExerciseScreen3;
+export default Triceps;

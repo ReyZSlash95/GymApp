@@ -1,9 +1,10 @@
 // src/redux/reducers/exerciseReducer.js
 
 const initialState = {
+  trainingData: null,
   selectedExercises: [],
-  savedPlans: [], // Przechowuje zapisane plany treningowe
-  planName: '', // Przechowuje nazwę aktualnego planu treningowego
+  savedPlans: [],
+  planName: '',
 };
 
 const exerciseReducer = (state = initialState, action) => {
@@ -13,6 +14,7 @@ const exerciseReducer = (state = initialState, action) => {
         ...state,
         selectedExercises: [...state.selectedExercises, action.payload],
       };
+
     case 'REMOVE_EXERCISE':
       return {
         ...state,
@@ -22,27 +24,20 @@ const exerciseReducer = (state = initialState, action) => {
       };
 
     case 'REPLACE_EXERCISE':
-      console.log(
-        'oldExerciseId:',
-        action.payload.oldExerciseId,
-        'newExercise:',
-        action.payload.newExercise,
-      );
+      const {index, newExercise} = action.payload;
       return {
         ...state,
-        selectedExercises: state.selectedExercises.map(exercise =>
-          exercise.id === action.payload.oldExerciseId
-            ? {...action.payload.newExercise, id: exercise.id} // Zachowaj oryginalne ID
-            : exercise,
+        selectedExercises: state.selectedExercises.map((exercise, idx) =>
+          idx === index ? {...newExercise} : exercise,
         ),
       };
 
-    case 'SAVE_PLAN':
-      return {
-        ...state,
-        savedPlans: [...state.savedPlans, action.payload],
-        selectedExercises: [], // Opcjonalnie, czyścić wybrane ćwiczenia po zapisaniu planu
-      };
+    // case 'SAVE_PLAN':
+    //   return {
+    //     ...state,
+    //     savedPlans: [...state.savedPlans, action.payload],
+    //     selectedExercises: [], // Opcjonalnie, czyścić wybrane ćwiczenia po zapisaniu planu
+    //   };
 
     case 'RESET_PLAN':
       return {
@@ -100,7 +95,41 @@ const exerciseReducer = (state = initialState, action) => {
         planName: action.payload,
       };
 
-    default:
+      case 'SET_TRAINING_DATA':
+        return {
+          ...state,
+          trainingData: action.payload,
+        };
+  
+      case 'UPDATE_SERIES_DATA': {
+        const { exerciseIndex, serieIndex, field, value } = action.payload;
+        const updatedExercises = state.trainingData.exercises.map((exercise, index) => {
+          if (index === exerciseIndex) {
+            const updatedSeries = exercise.series.map((serie, index) => {
+              if (index === serieIndex) {
+                return { ...serie, [field]: value };
+              }
+              return serie;
+            });
+            return { ...exercise, series: updatedSeries };
+          }
+          return exercise;
+        });
+  
+        return {
+          ...state,
+          trainingData: { ...state.trainingData, exercises: updatedExercises },
+        };
+      }
+  
+      case 'RESET_TRAINING_DATA':
+        return {
+          ...state,
+          trainingData: null,
+        };
+  
+
+      default:
       return state;
   }
 };

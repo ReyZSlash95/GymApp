@@ -9,34 +9,122 @@ import styles from '../../styles/ExerciseScreenStyles';
 const exercises = [
   {
     id: '1',
-    name: 'Push-up',
+    name: 'Alternating Dumbbell Front Raise',
+    type: 'shoulders',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/PushUp.gif'),
+    image: require('../../img/exercises/shoulders/AlternatingDumbbellFrontRaise.gif'),
   },
   {
     id: '2',
-    name: 'Pike Push-up',
+    name: 'Arnold Press',
+    type: 'shoulders',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/PikePushUp.gif'),
+    image: require('../../img/exercises/shoulders/ArnoldPress.gif'),
   },
   {
     id: '3',
-    name: 'Decline Chest Press Machine',
+    name: 'Barbell Standing Military Press',
+    type: 'shoulders',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/DeclineChestPressMachine.gif'),
+    image: require('../../img/exercises/shoulders/BarbellStandingMilitaryPress.gif'),
   },
   {
     id: '4',
-    name: 'Chest Dips',
+    name: 'Bent Over Lateral Raise',
+    type: 'shoulders',
     series: [{reps: '', weight: ''}],
-    image: require('../../img/exercises/klatka/ChestDips.gif'),
+    image: require('../../img/exercises/shoulders/BentOverLateralRaise.gif'),
+  },
+  {
+    id: '5',
+    name: 'Cable Upright Row',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/CableUprightRow.gif'),
+  },
+  {
+    id: '6',
+    name: 'Dumbbell Chest Supported Lateral Raises',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/DumbbellChestSupportedLateralRaises.gif'),
+  },
+  {
+    id: '7',
+    name: 'Dumbbell Cuban External Rotation',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/DumbbellCubanExternalRotation.gif'),
+  },
+  {
+    id: '8',
+    name: 'Dumbbell Lateral Raise',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/DumbbellLateralRaise.gif'),
+  },
+  {
+    id: '9',
+    name: 'Dumbbell Shoulder Press',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/DumbbellShoulderPress.gif'),
+  },
+  {
+    id: '10',
+    name: 'Face Pull',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/FacePull.gif'),
+  },
+  {
+    id: '11',
+    name: 'Half Kneeling High Cable Row Rope',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/HalfKneelingHighCableRowRope.gif'),
+  },
+  {
+    id: '12',
+    name: 'Lever Shoulder Press',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/LeverShoulderPress.gif'),
+  },
+  {
+    id: '13',
+    name: 'Rear Delt Machine Flys',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/RearDeltMachineFlys.gif'),
+  },
+  {
+    id: '14',
+    name: 'Seated Rear Lateral Dumbbell Raise',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/SeatedRearLateralDumbbellRaise.gif'),
+  },
+  {
+    id: '15',
+    name: 'Standing Dumbbell Overhead Press',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/StandingDumbbellOverheadPress.gif'),
+  },
+  {
+    id: '16',
+    name: 'Two Arm Dumbbell Front Raise',
+    type: 'shoulders',
+    series: [{reps: '', weight: ''}],
+    image: require('../../img/exercises/shoulders/TwoArmDumbbellFrontRaise.gif'),
   },
   // Add more exercises here
 ];
 
 import {useNavigation} from '@react-navigation/native';
 
-const ExerciseScreen4 = () => {
+const Shoulders = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -64,4 +152,4 @@ const ExerciseScreen4 = () => {
   );
 };
 
-export default ExerciseScreen4;
+export default Shoulders;

@@ -5,7 +5,7 @@ import {faEllipsisVertical} from '@fortawesome/free-solid-svg-icons';
 import {TouchableOpacity} from 'react-native';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 
-const DropDown = ({onRemoveExercise, exerciseId, onAddNote}) => {
+const DropDown = ({onRemoveExercise, exerciseIndex, onAddNote}) => {
   const [visible, setVisible] = useState(false);
 
   const openMenu = () => setVisible(true);
@@ -37,7 +37,7 @@ const DropDown = ({onRemoveExercise, exerciseId, onAddNote}) => {
       <Menu.Item
         onPress={() => {
           //   onChangeExercise(newExercise);
-          navigation.navigate('BodyParts', {changingExercise: exerciseId});
+          navigation.navigate('BodyParts', {changingExercise: exerciseIndex});
           closeMenu();
         }}
         title="Zmień ćwiczenie"

@@ -2,7 +2,13 @@
 
 export const addExercise = exercise => ({
   type: 'ADD_EXERCISE',
-  payload: exercise,
+  payload: {...exercise},
+});
+
+// TEST udpate exercise
+export const updateExerciseOrder = newOrder => ({
+  type: 'UPDATE_EXERCISE_ORDER',
+  payload: newOrder,
 });
 
 export const removeExercise = exerciseId => ({
@@ -10,9 +16,9 @@ export const removeExercise = exerciseId => ({
   payload: exerciseId,
 });
 
-export const replaceExercise = (oldExerciseId, newExercise) => ({
+export const replaceExercise = (index, newExercise) => ({
   type: 'REPLACE_EXERCISE',
-  payload: {oldExerciseId, newExercise},
+  payload: {index, newExercise},
 });
 
 export const savePlan = exercises => ({
@@ -51,6 +57,25 @@ export const setPlanName = name => {
     payload: name,
   };
 };
+
+// Trening 
+
+export const setTrainingData = trainingData => ({
+  type: 'SET_TRAINING_DATA',
+  payload: trainingData,
+});
+
+export const updateSeriesData = (exerciseIndex, serieIndex, field, value) => ({
+  type: 'UPDATE_SERIES_DATA',
+  payload: { exerciseIndex, serieIndex, field, value },
+});
+
+export const resetTrainingData = () => ({
+  type: 'RESET_TRAINING_DATA',
+});
+
+
+
 
 export const resetPlan = () => ({
   type: 'RESET_PLAN',

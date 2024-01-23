@@ -11,10 +11,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Plans from '../screens/Plans'; // Zaimportuj swoje komponenty
 import History from '../screens/History';
-import Exercises from '../screens/Exercises';
+import Training from '../screens/Training';
 import More from '../screens/More';
 
-import {TouchableOpacity, StyleSheet} from 'react-native';
+import {TouchableOpacity, StyleSheet, View} from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,13 +27,13 @@ const TabBarIcon = props => {
   useEffect(() => {
     if (focused) {
       viewRef.current.animate({
-        0: {scale: 0.8, rotate: '0deg'},
-        1: {scale: 1.5, rotate: '360deg'},
+        0: {scale: 0.8},
+        1: {scale: 1.5},
       });
     } else {
       viewRef.current.animate({
-        0: {scale: 1.5, rotate: '360deg'},
-        1: {scale: 1, rotate: '0deg'},
+        0: {scale: 1.5},
+        1: {scale: 1},
       });
     }
   }, [focused]);
@@ -60,16 +60,13 @@ const HomeTabs = () => {
         tabBarStyle: {
           height: 60,
           backgroundColor: '#202024',
-          // position: 'center',
-          // bottom: 16,
-          // right: 16,
-          // left: 16,
-          // borderRadius: 50,
         },
         headerStyle: {
           backgroundColor: '#202024',
         },
         headerTintColor: '#00B37E',
+
+        // tabBarHideOnKeyboard: true,
       }}>
       <Tab.Screen
         name="Plans"
@@ -88,8 +85,8 @@ const HomeTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Exercises"
-        component={Exercises}
+        name="Training"
+        component={Training}
         options={{
           tabBarShowLabel: false,
           tabBarButton: props => <TabBarIcon icon={faDumbbell} {...props} />,

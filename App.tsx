@@ -9,15 +9,22 @@ import store from './src/redux/store/configureStore';
 import NewPlan from './src/screens/NewPlan';
 import BodyParts from './src/screens/BodyParts';
 
-import ExerciseScreen1 from './src/screens/exerciseList/ExerciseScreen1';
-import ExerciseScreen2 from './src/screens/exerciseList/ExerciseScreen2';
-import ExerciseScreen3 from './src/screens/exerciseList/ExerciseScreen3';
-import ExerciseScreen4 from './src/screens/exerciseList/ExerciseScreen4';
+import Klatka from './src/screens/exerciseList/ExerciseScreen1';
+import TrainingDetail from './src/screens/TrainingDetail';
+import Biceps from './src/screens/exerciseList/ExerciseScreen2';
+import Triceps from './src/screens/exerciseList/ExerciseScreen3';
+import Shoulders from './src/screens/exerciseList/ExerciseScreen4';
+import Back from './src/screens/exerciseList/ExerciseScreen5';
+
 import ExerciseScreen6 from './src/screens/exerciseList/ExerciseScreen6';
 import ExerciseScreen7 from './src/screens/exerciseList/ExerciseScreen7';
 
+import TrainingSummary from './src/screens/TrainingSummary';
+
 import HomeTabs from './src/MenuTab/BottomTabNavigator';
 import {Provider as PaperProvider} from 'react-native-paper';
+
+import Training from './src/screens/Training';
 
 import {StyleSheet} from 'react-native';
 
@@ -25,10 +32,16 @@ type PlansStackParamList = {
   HomeTabs: undefined;
   NewPlan: undefined;
   BodyParts: undefined;
-  ExerciseScreen1: undefined;
-  ExerciseScreen2: undefined;
-  ExerciseScreen3: undefined;
-  ExerciseScreen4: undefined;
+  Klatka: undefined;
+  TrainingDetail: undefined;
+  TrainingSummary: undefined;
+  Biceps: undefined;
+  Triceps: undefined;
+  Shoulders: undefined;
+  Back: undefined;
+
+  Training: undefined;
+
   ExerciseScreen6: undefined;
   ExerciseScreen7: undefined;
 };
@@ -50,6 +63,10 @@ const App = () => {
                 color: '#00B37E',
                 fontWeight: 'bold',
               },
+
+              headerMode: 'screen',
+              presentation: 'transparentModal',
+              cardStyle: {backgroundColor: 'black'}, // Apply globally
             }}>
             <PlansStack.Screen
               name="HomeTabs"
@@ -57,23 +74,22 @@ const App = () => {
               options={{headerShown: false}}
             />
             <PlansStack.Screen name="NewPlan" component={NewPlan} />
+
             <PlansStack.Screen name="BodyParts" component={BodyParts} />
+
+            <PlansStack.Screen name="Klatka" component={Klatka} />
             <PlansStack.Screen
-              name="ExerciseScreen1"
-              component={ExerciseScreen1}
+              name="TrainingDetail"
+              component={TrainingDetail}
             />
             <PlansStack.Screen
-              name="ExerciseScreen2"
-              component={ExerciseScreen2}
+              name="TrainingSummary"
+              component={TrainingSummary}
             />
-            <PlansStack.Screen
-              name="ExerciseScreen3"
-              component={ExerciseScreen3}
-            />
-            <PlansStack.Screen
-              name="ExerciseScreen4"
-              component={ExerciseScreen4}
-            />
+            <PlansStack.Screen name="Biceps" component={Biceps} />
+            <PlansStack.Screen name="Triceps" component={Triceps} />
+            <PlansStack.Screen name="Shoulders" component={Shoulders} />
+            <PlansStack.Screen name="Back" component={Back} />
             <PlansStack.Screen
               name="ExerciseScreen6"
               component={ExerciseScreen6}
@@ -82,7 +98,9 @@ const App = () => {
               name="ExerciseScreen7"
               component={ExerciseScreen7}
             />
+            <PlansStack.Screen name="Training" component={Training} />
           </PlansStack.Navigator>
+          {/* <Navbar /> */}
         </NavigationContainer>
       </PaperProvider>
     </Provider>

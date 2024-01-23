@@ -13,33 +13,34 @@ import {ImageBackground} from 'react-native';
 const bodyParts = [
   {
     id: '1',
-    name: 'Barki',
-    image: require('../img/exercises/partieMiesniowe/Barki.png'),
-    screen: 'ExerciseScreen1',
+    name: 'Klatka',
+    image: require('../img/exercises/partieMiesniowe/Klatka.png'),
+    screen: 'Klatka',
   },
   {
     id: '2',
     name: 'Biceps',
     image: require('../img/exercises/partieMiesniowe/Biceps.png'),
-    screen: 'ExerciseScreen2',
+    screen: 'Biceps',
   },
   {
     id: '3',
     name: 'Triceps',
     image: require('../img/exercises/partieMiesniowe/Triceps.png'),
-    screen: 'ExerciseScreen3',
+    screen: 'Triceps',
   },
   {
     id: '4',
-    name: 'Klatka piersiowa',
-    image: require('../img/exercises/partieMiesniowe/Klatka.png'),
-    screen: 'ExerciseScreen4',
+    name: 'Shoulders',
+    image: require('../img/exercises/partieMiesniowe/Barki.png'),
+
+    screen: 'Shoulders',
   },
   {
     id: '5',
-    name: 'Plecy',
+    name: 'Back',
     image: require('../img/exercises/partieMiesniowe/Plecy.png'),
-    screen: 'ExerciseScreen5',
+    screen: 'Back',
   },
   {
     id: '6',
@@ -59,16 +60,25 @@ const BodyParts = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {changingExercise} = route.params || {};
+  console.log('changingExercise index 1:', changingExercise);
 
-  const renderItem = ({item}) => (
-    <TouchableOpacity
-      style={styles.exerciseItem}
-      onPress={() => navigation.navigate(item.screen, {changingExercise})}>
-      <ImageBackground source={item.image} style={styles.exerciseImage}>
-        <Text style={styles.exerciseText}>{item.name}</Text>
-      </ImageBackground>
-    </TouchableOpacity>
-  );
+  const renderItem = ({item}) => {
+    console.log(
+      'Navigating to:',
+      item.screen,
+      'with changingExercise:',
+      changingExercise,
+    );
+    return (
+      <TouchableOpacity
+        style={styles.exerciseItem}
+        onPress={() => navigation.navigate(item.screen, {changingExercise})}>
+        <ImageBackground source={item.image} style={styles.exerciseImage}>
+          <Text style={styles.exerciseText}>{item.name}</Text>
+        </ImageBackground>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.backgroundContainer}>
