@@ -19,20 +19,27 @@ import {
   setTrainingData,
   updateSeriesData,
   resetTrainingData,
+  resetPlanId,
 } from '../redux/actions/exerciseActions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import logo from '../img/Ui/LogoGymApp.png';
 import logoGym from '../img/Ui/LogoGym.png';
+
+import {useTrainingHistoryLoader} from './Training/TrainingHisotryLoader';
 
 const {width} = Dimensions.get('window');
 
 const Training = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const planIdFromRoute = route.params?.planId;
+  const planIdFromRedux = useSelector(state => state.exercise.planId);
   const trainingData = useSelector(state => state.exercise.trainingData);
 
   const [isTrainingActive, setIsTrainingActive] = useState(false);
+  const [trainingStartTime, setTrainingStartTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [timerInterval, setTimerInterval] = useState(null);
+  const [intervalId, setIntervalId] = useState(null); // Dodane
 
   useEffect(() => {
     const loadTrainingData = async () => {
@@ -42,19 +49,46 @@ const Training = ({route}) => {
       }
     };
 
-    if (planIdFromRoute) {
-      getPlan(planIdFromRoute);
+    if (planIdFromRedux) {
+      getPlan(planIdFromRedux);
     } else {
       loadTrainingData();
     }
 
     const checkActiveTraining = async () => {
       const savedStartTime = await AsyncStorage.getItem('trainingStartTime');
-      setIsTrainingActive(!!savedStartTime);
+      if (savedStartTime) {
+        const startTime = parseInt(savedStartTime, 10);
+        setTrainingStartTime(startTime);
+        setIsTrainingActive(true);
+        startTimer(startTime);
+      }
     };
 
+    loadTrainingData();
     checkActiveTraining();
-  }, [planIdFromRoute, dispatch]);
+
+    return () => {
+      // Czyści timer przy odmontowywaniu komponentu
+      stopAndResetTimer();
+    };
+  }, [planIdFromRedux, dispatch]);
+
+  const startTimer = startTime => {
+    setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    setIntervalId(interval); // Zapamiętaj identyfikator interwału
+  };
+
+  const stopAndResetTimer = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+    setElapsedTime(0);
+  };
 
   const getPlan = async planId => {
     try {
@@ -64,9 +98,6 @@ const Training = ({route}) => {
         .get();
       if (planDocument.exists) {
         const planData = planDocument.data();
-        console.log('training:', planData);
-
-        // Konwersja daty na timestamp
         const createdAtTimestamp = planData.createdAt
           ? planData.createdAt.seconds * 1000
           : Date.now();
@@ -85,20 +116,21 @@ const Training = ({route}) => {
   const startTraining = async () => {
     const startTime = Date.now();
     await AsyncStorage.setItem('trainingStartTime', startTime.toString());
-    if (planIdFromRoute) {
-      await AsyncStorage.setItem('activePlanId', planIdFromRoute.toString());
+    if (planIdFromRedux) {
+      await AsyncStorage.setItem('activePlanId', planIdFromRedux.toString());
     }
+    setTrainingStartTime(startTime);
     setIsTrainingActive(true);
+    startTimer(startTime);
   };
 
   const endTraining = async () => {
-    const duration =
-      Date.now() -
-      parseInt(await AsyncStorage.getItem('trainingStartTime'), 10);
+    const duration = elapsedTime;
     saveTrainingHistory(duration);
     await AsyncStorage.removeItem('trainingStartTime');
     await AsyncStorage.removeItem('activePlanId');
-    setIsTrainingActive(false); // Dodajemy aktualizację stanu
+    setIsTrainingActive(false);
+    stopAndResetTimer();
   };
 
   const confirmEndTraining = () => {
@@ -112,9 +144,45 @@ const Training = ({route}) => {
     );
   };
 
+  const handleDuplicateLastSeries = async exerciseIndex => {
+    const updatedExercises = trainingData.exercises.map((exercise, index) => {
+      if (index === exerciseIndex) {
+        const lastSeries = exercise.series[exercise.series.length - 1];
+        const newSeries = {...lastSeries};
+        return {...exercise, series: [...exercise.series, newSeries]};
+      }
+      return exercise;
+    });
+
+    const updatedTrainingData = {...trainingData, exercises: updatedExercises};
+    dispatch(setTrainingData(updatedTrainingData));
+    await AsyncStorage.setItem(
+      'trainingData',
+      JSON.stringify(updatedTrainingData),
+    );
+  };
+
+  const handleRemoveLastSeries = async exerciseIndex => {
+    const updatedExercises = trainingData.exercises.map((exercise, index) => {
+      if (index === exerciseIndex && exercise.series.length > 1) {
+        return {
+          ...exercise,
+          series: exercise.series.slice(0, exercise.series.length - 1),
+        };
+      }
+      return exercise;
+    });
+
+    const updatedTrainingData = {...trainingData, exercises: updatedExercises};
+    dispatch(setTrainingData(updatedTrainingData));
+    await AsyncStorage.setItem(
+      'trainingData',
+      JSON.stringify(updatedTrainingData),
+    );
+  };
+
   const saveTrainingHistory = async duration => {
     const savedPlanId = await AsyncStorage.getItem('activePlanId');
-
     if (!savedPlanId || !trainingData || !trainingData.exercises) {
       console.error('Plan ID or Plan data is missing');
       return;
@@ -124,7 +192,7 @@ const Training = ({route}) => {
       completedDate: firestore.FieldValue.serverTimestamp(),
       planId: savedPlanId,
       exercises: trainingData.exercises,
-      duration,
+      duration, // Czas trwania treningu
       planName: trainingData.planName,
     };
 
@@ -133,6 +201,7 @@ const Training = ({route}) => {
       Alert.alert('Sukces', 'Historia treningu została zapisana.');
       await AsyncStorage.removeItem('trainingData');
       dispatch(resetTrainingData());
+      dispatch(resetPlanId());
       navigation.navigate('TrainingSummary', {plan: null});
     } catch (error) {
       console.error('Błąd podczas zapisywania historii treningu:', error);
@@ -182,6 +251,13 @@ const Training = ({route}) => {
     );
   }
 
+  const formatTime = seconds => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.planNameStyle}>{trainingData.planName}</Text>
@@ -190,6 +266,18 @@ const Training = ({route}) => {
           <View key={exerciseIndex} style={[styles.exerciseContainer, {width}]}>
             <Text style={styles.exerciseName}>{exercise.name}</Text>
             <FastImage source={exercise.image} style={styles.image} />
+            <Text style={styles.timerText}>
+              Czas treningu: {formatTime(elapsedTime)}
+            </Text>
+
+            <View style={styles.buttonContainerSeriesAdd}>
+              <TouchableOpacity
+                style={styles.addSeriesButton}
+                onPress={() => handleRemoveLastSeries(exerciseIndex)}>
+                <Text style={styles.addSeriesButtonText}>USUN</Text>
+              </TouchableOpacity>
+            </View>
+
             <ScrollView
               style={{flexGrow: 0}}
               keyboardShouldPersistTaps="handled">
@@ -243,6 +331,14 @@ const Training = ({route}) => {
                 </View>
               ))}
             </ScrollView>
+            {/* Dodaj serie */}
+            <View style={styles.buttonContainerSeriesAdd}>
+              <TouchableOpacity
+                style={styles.addSeriesButton}
+                onPress={() => handleDuplicateLastSeries(exerciseIndex)}>
+                <Text style={styles.addSeriesButtonText}>DODAJ</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -258,6 +354,33 @@ const Training = ({route}) => {
 };
 
 const styles = StyleSheet.create({
+  timerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+
+  buttonContainerSeriesAdd: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 10,
+    width: '80%',
+  },
+  addSeriesButton: {
+    backgroundColor: '#00B37E',
+    padding: 3,
+    margin: 3,
+
+    borderRadius: 5,
+  },
+  addSeriesButtonText: {
+    color: '#121214',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  //
   logoContainer: {
     alignItems: 'center',
     marginBottom: 20,
@@ -294,29 +417,29 @@ const styles = StyleSheet.create({
     color: '#00B37E',
     fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
+    // textAlign: 'center',
+    marginLeft: 20,
     marginVertical: 10,
   },
   exerciseContainer: {
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     marginVertical: 10,
     padding: 10,
     backgroundColor: '#121214',
     borderRadius: 10,
-    height: 400,
   },
   exerciseName: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   serieContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#29292E',
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
     height: 35,
     margin: 5,
     borderRadius: 3,

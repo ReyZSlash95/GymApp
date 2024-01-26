@@ -58,7 +58,7 @@ export const setPlanName = name => {
   };
 };
 
-// Trening 
+// Trening
 
 export const setTrainingData = trainingData => ({
   type: 'SET_TRAINING_DATA',
@@ -67,15 +67,21 @@ export const setTrainingData = trainingData => ({
 
 export const updateSeriesData = (exerciseIndex, serieIndex, field, value) => ({
   type: 'UPDATE_SERIES_DATA',
-  payload: { exerciseIndex, serieIndex, field, value },
+  payload: {exerciseIndex, serieIndex, field, value},
 });
 
 export const resetTrainingData = () => ({
   type: 'RESET_TRAINING_DATA',
 });
 
+export const setPlanId = planId => ({
+  type: 'SET_PLAN_ID',
+  payload: planId,
+});
 
-
+export const resetPlanId = () => ({
+  type: 'RESET_PLAN_ID',
+});
 
 export const resetPlan = () => ({
   type: 'RESET_PLAN',

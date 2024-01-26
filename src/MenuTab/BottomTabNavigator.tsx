@@ -1,116 +1,126 @@
-import React, {useEffect, useRef} from 'react';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import * as Animatable from 'react-native-animatable';
+import React from 'react';
+import {Dimensions} from 'react-native';
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import Plans from '../screens/Plans';
+import History from '../screens/History';
+import Training from '../screens/Training';
+import More from '../screens/More';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faList,
   faCalendar,
   faDumbbell,
   faEllipsisVertical,
-  faD,
 } from '@fortawesome/free-solid-svg-icons';
-import Plans from '../screens/Plans'; // Zaimportuj swoje komponenty
-import History from '../screens/History';
-import Training from '../screens/Training';
-import More from '../screens/More';
+import {StyleSheet, View} from 'react-native';
+import {Header} from 'react-native-elements';
 
-import {TouchableOpacity, StyleSheet, View} from 'react-native';
+const Tab = createMaterialTopTabNavigator();
 
-const Tab = createBottomTabNavigator();
+import {createStackNavigator} from '@react-navigation/stack';
 
-const TabBarIcon = props => {
-  const {icon, onPress, accessibilityState} = props;
-  const focused = accessibilityState.selected;
-  const viewRef = useRef(null);
-  const color = focused ? '#00B37E' : '#e4b04e';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
-  useEffect(() => {
-    if (focused) {
-      viewRef.current.animate({
-        0: {scale: 0.8},
-        1: {scale: 1.5},
-      });
-    } else {
-      viewRef.current.animate({
-        0: {scale: 1.5},
-        1: {scale: 1},
-      });
-    }
-  }, [focused]);
+const PlansStack = createStackNavigator();
+const HistoryStack = createStackNavigator();
+const TrainingStack = createStackNavigator();
+const MoreStack = createStackNavigator();
 
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={1}
-      style={styles.container}>
-      <Animatable.View
-        ref={viewRef}
-        duration={400}
-        style={{justifyContent: 'center', alignItems: 'center'}}>
-        <FontAwesomeIcon icon={icon} size={24} color={color} />
-      </Animatable.View>
-    </TouchableOpacity>
-  );
-};
+const PlansStackNavigator = () => (
+  <PlansStack.Navigator>
+    <PlansStack.Screen
+      name="Plans"
+      component={Plans}
+      options={{headerTitle: 'Plans'}}
+    />
+    {/* Możesz dodać więcej ekranów, jeśli są */}
+  </PlansStack.Navigator>
+);
+
+const HistoryStackNavigator = () => (
+  <HistoryStack.Navigator>
+    <HistoryStack.Screen
+      name="History"
+      component={History}
+      options={{headerTitle: 'History'}}
+    />
+    {/* Dodatkowe ekrany dla History, jeśli są */}
+  </HistoryStack.Navigator>
+);
+
+const TrainingStackNavigator = () => (
+  <TrainingStack.Navigator>
+    <TrainingStack.Screen
+      name="Training"
+      component={Training}
+      options={{headerTitle: 'Training'}}
+    />
+    {/* Dodatkowe ekrany dla Training, jeśli są */}
+  </TrainingStack.Navigator>
+);
+
+const MoreStackNavigator = () => (
+  <MoreStack.Navigator>
+    <MoreStack.Screen
+      name="More"
+      component={More}
+      options={{headerTitle: 'More'}}
+    />
+    {/* Dodatkowe ekrany dla More, jeśli są */}
+  </MoreStack.Navigator>
+);
 
 const HomeTabs = () => {
   return (
     <Tab.Navigator
-      screenOptions={{
-        tabBarStyle: {
-          height: 60,
-          backgroundColor: '#202024',
-        },
-        headerStyle: {
-          backgroundColor: '#202024',
-        },
-        headerTintColor: '#00B37E',
+      initialLayout={{width: Dimensions.get('window').width}}
+      tabBarPosition="bottom"
+      screenOptions={({route}) => ({
+        tabBarActiveTintColor: '#e4b04e',
+        tabBarInactiveTintColor: '#00B37E',
+        tabBarAndroidRipple: {borderless: true, color: '#29292E', radius: 50},
 
-        // tabBarHideOnKeyboard: true,
-      }}>
-      <Tab.Screen
-        name="Plans"
-        component={Plans}
-        options={{
-          tabBarShowLabel: false,
-          tabBarButton: props => <TabBarIcon icon={faList} {...props} />,
-        }}
-      />
-      <Tab.Screen
-        name="History"
-        component={History}
-        options={{
-          tabBarShowLabel: false,
-          tabBarButton: props => <TabBarIcon icon={faCalendar} {...props} />,
-        }}
-      />
-      <Tab.Screen
-        name="Training"
-        component={Training}
-        options={{
-          tabBarShowLabel: false,
-          tabBarButton: props => <TabBarIcon icon={faDumbbell} {...props} />,
-        }}
-      />
-      <Tab.Screen
-        name="More"
-        component={More}
-        options={{
-          tabBarShowLabel: false,
-          tabBarButton: props => (
-            <TabBarIcon icon={faEllipsisVertical} {...props} />
-          ),
-        }}
-      />
+        tabBarStyle: styles.tabBar,
+        swipeEnabled: false,
+        tabBarIcon: ({focused, color}) => {
+          let iconName;
+
+          switch (route.name) {
+            case 'PlansTab':
+              iconName = faList;
+              break;
+            case 'HistoryTab':
+              iconName = faCalendar;
+              break;
+            case 'TrainingTab':
+              iconName = faDumbbell;
+              break;
+            case 'MoreTab':
+              iconName = faEllipsisVertical;
+              break;
+            default:
+              iconName = null;
+              break;
+          }
+
+          return iconName ? (
+            <FontAwesomeIcon icon={iconName} size={24} color={color} />
+          ) : null;
+        },
+      })}>
+      <Tab.Screen name="PlansTab" component={PlansStackNavigator} />
+      <Tab.Screen name="HistoryTab" component={HistoryStackNavigator} />
+      <Tab.Screen name="TrainingTab" component={TrainingStackNavigator} />
+      <Tab.Screen name="MoreTab" component={MoreStackNavigator} />
     </Tab.Navigator>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  tabBar: {
+    backgroundColor: '#202024',
+    height: 60,
+    // Usunięto position: 'absolute'
   },
 });
 

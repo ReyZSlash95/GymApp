@@ -5,6 +5,7 @@ const initialState = {
   selectedExercises: [],
   savedPlans: [],
   planName: '',
+  planId: null,
 };
 
 const exerciseReducer = (state = initialState, action) => {
@@ -95,41 +96,55 @@ const exerciseReducer = (state = initialState, action) => {
         planName: action.payload,
       };
 
-      case 'SET_TRAINING_DATA':
-        return {
-          ...state,
-          trainingData: action.payload,
-        };
-  
-      case 'UPDATE_SERIES_DATA': {
-        const { exerciseIndex, serieIndex, field, value } = action.payload;
-        const updatedExercises = state.trainingData.exercises.map((exercise, index) => {
+    case 'SET_TRAINING_DATA':
+      return {
+        ...state,
+        trainingData: action.payload,
+      };
+
+    case 'UPDATE_SERIES_DATA': {
+      const {exerciseIndex, serieIndex, field, value} = action.payload;
+      const updatedExercises = state.trainingData.exercises.map(
+        (exercise, index) => {
           if (index === exerciseIndex) {
             const updatedSeries = exercise.series.map((serie, index) => {
               if (index === serieIndex) {
-                return { ...serie, [field]: value };
+                return {...serie, [field]: value};
               }
               return serie;
             });
-            return { ...exercise, series: updatedSeries };
+            return {...exercise, series: updatedSeries};
           }
           return exercise;
-        });
-  
-        return {
-          ...state,
-          trainingData: { ...state.trainingData, exercises: updatedExercises },
-        };
-      }
-  
-      case 'RESET_TRAINING_DATA':
-        return {
-          ...state,
-          trainingData: null,
-        };
-  
+        },
+      );
 
-      default:
+      return {
+        ...state,
+        trainingData: {...state.trainingData, exercises: updatedExercises},
+      };
+    }
+
+    case 'RESET_TRAINING_DATA':
+      return {
+        ...state,
+        trainingData: null,
+      };
+
+    case 'SET_PLAN_ID':
+      return {
+        ...state,
+        planId: action.payload,
+      };
+
+    case 'RESET_PLAN_ID':
+      console.log('RESET_PLAN_ID');
+      return {
+        ...state,
+        planId: null,
+      };
+
+    default:
       return state;
   }
 };

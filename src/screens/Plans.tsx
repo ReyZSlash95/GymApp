@@ -10,6 +10,9 @@ import {
   Alert,
 } from 'react-native';
 
+import {useDispatch} from 'react-redux';
+import {setPlanId} from '../redux/actions/exerciseActions';
+
 import DraggableFlatList from 'react-native-draggable-flatlist';
 
 import firestore from '@react-native-firebase/firestore';
@@ -21,6 +24,8 @@ const Plans = () => {
   const [plans, setPlans] = useState([]);
   const [expandedPlanId, setExpandedPlanId] = useState(null); // Stan dla śledzenia rozwiniętego planu
   const navigation = useNavigation();
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const subscriber = firestore()
@@ -62,10 +67,9 @@ const Plans = () => {
   };
 
   const handleStartTraining = planId => {
-    navigation.reset({
-      index: 0,
-      routes: [{name: 'Training', params: {planId: planId}}],
-    });
+    dispatch(setPlanId(planId));
+
+    navigation.navigate('Training');
   };
 
   const handleDeletePlan = planId => {

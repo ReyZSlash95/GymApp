@@ -1,7 +1,7 @@
 // App.tsx
 import React, {useEffect, useRef} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import {TransitionPresets, createStackNavigator} from '@react-navigation/stack';
 
 import {Provider} from 'react-redux';
 import store from './src/redux/store/configureStore';
@@ -46,7 +46,7 @@ type PlansStackParamList = {
   ExerciseScreen7: undefined;
 };
 
-const PlansStack = createStackNavigator<PlansStackParamList>();
+const PlansStack = createStackNavigator();
 
 const App = () => {
   return (
@@ -54,29 +54,15 @@ const App = () => {
       <PaperProvider>
         <NavigationContainer>
           <PlansStack.Navigator
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: '#202024',
-              },
-              headerTintColor: '#00B37E',
-              headerTitleStyle: {
-                color: '#00B37E',
-                fontWeight: 'bold',
-              },
-
-              headerMode: 'screen',
-              presentation: 'transparentModal',
-              cardStyle: {backgroundColor: 'black'}, // Apply globally
-            }}>
+            initialRouteName="Plans"
+            screenOptions={TransitionPresets.SlideFromRightIOS}>
             <PlansStack.Screen
               name="HomeTabs"
               component={HomeTabs}
               options={{headerShown: false}}
             />
             <PlansStack.Screen name="NewPlan" component={NewPlan} />
-
             <PlansStack.Screen name="BodyParts" component={BodyParts} />
-
             <PlansStack.Screen name="Klatka" component={Klatka} />
             <PlansStack.Screen
               name="TrainingDetail"
@@ -98,7 +84,7 @@ const App = () => {
               name="ExerciseScreen7"
               component={ExerciseScreen7}
             />
-            <PlansStack.Screen name="Training" component={Training} />
+            {/* <PlansStack.Screen name="Training" component={Training} /> */}
           </PlansStack.Navigator>
           {/* <Navbar /> */}
         </NavigationContainer>
