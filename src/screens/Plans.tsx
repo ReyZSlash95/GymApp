@@ -49,12 +49,10 @@ const Plans = () => {
 
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity style={{margin: 10}}>
-          <Button
-            onPress={() => navigation.navigate('NewPlan')}
-            title="Stwórz plan"
-            color="#121214"
-          />
+        <TouchableOpacity
+          onPress={() => navigation.navigate('NewPlan')}
+          style={styles.headerButton}>
+          <Text style={styles.headerButtonText}>CREATE PLAN</Text>
         </TouchableOpacity>
       ),
     });
@@ -70,6 +68,7 @@ const Plans = () => {
     dispatch(setPlanId(planId));
 
     navigation.navigate('Training');
+    console.log(planId);
   };
 
   const handleDeletePlan = planId => {
@@ -110,39 +109,6 @@ const Plans = () => {
         {/* {renderSeriesDetails(exercise.series)} */}
       </View>
     ));
-  };
-
-  const renderPlanDetails = plan => {
-    const isExpanded = expandedPlanId === plan.key;
-
-    return (
-      <View style={styles.detailContainer}>
-        <TouchableOpacity onPress={() => handleExpand(plan.key)}>
-          <View style={styles.planItem}>
-            <Text style={styles.planName}>{plan.planName}</Text>
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <>
-            {renderExerciseList(plan.exercises)}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                onPress={() => handleDeletePlan(plan.key)}
-                style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>Usuń Plan</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleStartTraining(plan.key)}
-                style={styles.startTrainingButton}>
-                <Text style={styles.startTrainingButtonText}>
-                  Rozpocznij trening
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-      </View>
-    );
   };
 
   const onDragEnd = async ({data}) => {
@@ -207,6 +173,18 @@ const Plans = () => {
 };
 
 const styles = StyleSheet.create({
+  // HEADER BUTTON
+  headerButton: {
+    backgroundColor: '#e4b04e',
+    padding: 5,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  headerButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  //
   detailContainer: {
     backgroundColor: '#e4b04e',
     borderRadius: 3,

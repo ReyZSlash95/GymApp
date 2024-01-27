@@ -86,3 +86,15 @@ export const resetPlanId = () => ({
 export const resetPlan = () => ({
   type: 'RESET_PLAN',
 });
+
+// History
+
+export const setTrainingDataFromHistory = trainingData => ({
+  type: 'SET_TRAINING_DATA_FROM_HISTORY',
+  payload: trainingData,
+});
+
+export const setPlanHistoryId = planId => ({
+  type: 'SET_PLAN_HISTORY_ID',
+  payload: planId,
+});

@@ -1,7 +1,7 @@
 // TrainingHistoryLoader.js
 import firestore from '@react-native-firebase/firestore';
 import {useDispatch} from 'react-redux';
-import {setTrainingDataFromHistory} from '../redux/actions/exerciseActions';
+import {setTrainingDataFromHistory} from '../../redux/actions/exerciseActions';
 
 export const useTrainingHistoryLoader = () => {
   const dispatch = useDispatch();
@@ -14,7 +14,19 @@ export const useTrainingHistoryLoader = () => {
         .get();
       if (trainingHistoryDoc.exists) {
         const trainingHistoryData = trainingHistoryDoc.data();
-        dispatch(setTrainingDataFromHistory(trainingHistoryData));
+
+        // Konwersja completedDate na timestamp
+        const completedDateTimestamp = trainingHistoryData.completedDate
+          .toDate()
+          .getTime();
+
+        // Użycie zmodyfikowanego obiektu z konwertowaną datą
+        const modifiedTrainingHistoryData = {
+          ...trainingHistoryData,
+          completedDate: completedDateTimestamp,
+        };
+
+        dispatch(setTrainingDataFromHistory(modifiedTrainingHistoryData));
       } else {
         Alert.alert('Błąd', 'Nie znaleziono historii treningu.');
       }

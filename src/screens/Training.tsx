@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   Alert,
   Button,
@@ -25,35 +25,92 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import logo from '../img/Ui/LogoGymApp.png';
 import logoGym from '../img/Ui/LogoGym.png';
 
-import {useTrainingHistoryLoader} from './Training/TrainingHisotryLoader';
-
 const {width} = Dimensions.get('window');
 
 const Training = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const planIdFromRedux = useSelector(state => state.exercise.planId);
+  const planIdSourceFromRedux = useSelector(
+    state => state.exercise.planIdSource,
+  );
+
   const trainingData = useSelector(state => state.exercise.trainingData);
 
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [trainingStartTime, setTrainingStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [timerInterval, setTimerInterval] = useState(null);
-  const [intervalId, setIntervalId] = useState(null); // Dodane
+  const [intervalId, setIntervalId] = useState(null);
 
-  useEffect(() => {
-    const loadTrainingData = async () => {
+  // test
+  const loadTrainingData = async () => {
+    console.log(planIdFromRedux, planIdSourceFromRedux);
+    if (planIdSourceFromRedux === 'History') {
+      try {
+        const trainingHistoryDoc = await firestore()
+          .collection('trainingHistory')
+          .doc(planIdFromRedux)
+          .get();
+
+        if (trainingHistoryDoc.exists) {
+          let trainingHistoryData = trainingHistoryDoc.data();
+
+          // Przekształć 'completedDate' na timestamp
+          if (trainingHistoryData.completedDate) {
+            trainingHistoryData = {
+              ...trainingHistoryData,
+              completedDate: trainingHistoryData.completedDate.toMillis(),
+            };
+          }
+
+          dispatch(setTrainingData(trainingHistoryData));
+
+          // Zapisz dane historii treningu w AsyncStorage
+          await AsyncStorage.setItem(
+            'trainingData',
+            JSON.stringify(trainingHistoryData),
+          );
+        } else {
+          console.log('Brak danych historii treningu dla tego ID');
+        }
+      } catch (error) {
+        console.error('Błąd podczas ładowania historii treningu:', error);
+      }
+    } else if (planIdSourceFromRedux === 'Plans') {
+      try {
+        const planDoc = await firestore()
+          .collection('trainingPlans')
+          .doc(planIdFromRedux)
+          .get();
+
+        if (planDoc.exists) {
+          const planData = planDoc.data();
+          const createdAtTimestamp = planData.createdAt
+            ? planData.createdAt.toMillis()
+            : Date.now();
+          dispatch(
+            setTrainingData({...planData, createdAt: createdAtTimestamp}),
+          );
+          await AsyncStorage.setItem('trainingData', JSON.stringify(planData));
+        } else {
+          console.log('Brak danych planu treningowego dla tego ID');
+        }
+      } catch (error) {
+        console.error('Błąd podczas ładowania planu treningowego:', error);
+      }
+    } else {
       const savedTrainingData = await AsyncStorage.getItem('trainingData');
       if (savedTrainingData) {
         dispatch(setTrainingData(JSON.parse(savedTrainingData)));
+      } else {
+        console.log('Brak zapisanych danych treningowych');
       }
-    };
-
-    if (planIdFromRedux) {
-      getPlan(planIdFromRedux);
-    } else {
-      loadTrainingData();
     }
+  };
+  // end test
+
+  useEffect(() => {
+    loadTrainingData();
 
     const checkActiveTraining = async () => {
       const savedStartTime = await AsyncStorage.getItem('trainingStartTime');
@@ -65,21 +122,20 @@ const Training = ({route}) => {
       }
     };
 
-    loadTrainingData();
     checkActiveTraining();
 
     return () => {
-      // Czyści timer przy odmontowywaniu komponentu
-      stopAndResetTimer();
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [planIdFromRedux, dispatch]);
+  }, [planIdFromRedux, route.params?.trainingHistoryId, dispatch, getPlan]);
 
   const startTimer = startTime => {
-    setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
     const interval = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
-    setIntervalId(interval); // Zapamiętaj identyfikator interwału
+    setIntervalId(interval);
   };
 
   const stopAndResetTimer = () => {
@@ -90,28 +146,37 @@ const Training = ({route}) => {
     setElapsedTime(0);
   };
 
-  const getPlan = async planId => {
-    try {
-      const planDocument = await firestore()
-        .collection('trainingPlans')
-        .doc(planId)
-        .get();
-      if (planDocument.exists) {
-        const planData = planDocument.data();
-        const createdAtTimestamp = planData.createdAt
-          ? planData.createdAt.seconds * 1000
-          : Date.now();
-        planData.createdAt = createdAtTimestamp;
+  const getPlan = useCallback(
+    async planId => {
+      try {
+        const planDocument = await firestore()
+          .collection('trainingPlans')
+          .doc(planId)
+          .get();
 
-        dispatch(setTrainingData(planData));
-        await AsyncStorage.setItem('trainingData', JSON.stringify(planData));
-      } else {
-        Alert.alert('Błąd', 'Nie znaleziono planu treningowego.');
+        if (planDocument.exists) {
+          const planData = planDocument.data();
+
+          // Konwersja Timestamp na milisekundy
+          const createdAtTimestamp = planData.createdAt
+            ? planData.createdAt.toMillis() // zmiana z `planData.createdAt.seconds * 1000`
+            : Date.now();
+
+          dispatch(
+            setTrainingData({...planData, createdAt: createdAtTimestamp}),
+          );
+          await AsyncStorage.setItem('trainingData', JSON.stringify(planData));
+        } else {
+          Alert.alert('Błąd', 'Nie znaleziono planu treningowego.');
+        }
+      } catch (error) {
+        console.error('Błąd podczas pobierania planu:', error);
       }
-    } catch (error) {
-      console.error('Błąd podczas pobierania planu:', error);
-    }
-  };
+    },
+    [dispatch],
+  );
+
+  // REST OF THE CODE
 
   const startTraining = async () => {
     const startTime = Date.now();
@@ -354,6 +419,24 @@ const Training = ({route}) => {
 };
 
 const styles = StyleSheet.create({
+  // HEADER BUTTON
+  headerButton: {
+    backgroundColor: '#e4b04e',
+    padding: 5,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  headerButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  //
+  detailContainer: {
+    backgroundColor: '#e4b04e',
+    borderRadius: 3,
+    margin: 5,
+    // padding: 1,
+  },
   timerText: {
     fontSize: 20,
     fontWeight: 'bold',

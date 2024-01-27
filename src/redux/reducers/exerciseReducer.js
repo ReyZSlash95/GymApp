@@ -6,6 +6,7 @@ const initialState = {
   savedPlans: [],
   planName: '',
   planId: null,
+  planIdSource: null,
 };
 
 const exerciseReducer = (state = initialState, action) => {
@@ -32,13 +33,6 @@ const exerciseReducer = (state = initialState, action) => {
           idx === index ? {...newExercise} : exercise,
         ),
       };
-
-    // case 'SAVE_PLAN':
-    //   return {
-    //     ...state,
-    //     savedPlans: [...state.savedPlans, action.payload],
-    //     selectedExercises: [], // Opcjonalnie, czyścić wybrane ćwiczenia po zapisaniu planu
-    //   };
 
     case 'RESET_PLAN':
       return {
@@ -102,6 +96,21 @@ const exerciseReducer = (state = initialState, action) => {
         trainingData: action.payload,
       };
 
+    // TEST
+
+    case 'SET_TRAINING_DATA_FROM_HISTORY':
+      return {
+        ...state,
+        trainingData: action.payload,
+      };
+
+    case 'SET_PLAN_HISTORY_ID':
+      return {
+        ...state,
+        planId: action.payload,
+        planIdSource: 'History',
+      };
+
     case 'UPDATE_SERIES_DATA': {
       const {exerciseIndex, serieIndex, field, value} = action.payload;
       const updatedExercises = state.trainingData.exercises.map(
@@ -135,6 +144,7 @@ const exerciseReducer = (state = initialState, action) => {
       return {
         ...state,
         planId: action.payload,
+        planIdSource: 'Plans',
       };
 
     case 'RESET_PLAN_ID':
@@ -142,6 +152,7 @@ const exerciseReducer = (state = initialState, action) => {
       return {
         ...state,
         planId: null,
+        planIdSource: null,
       };
 
     default:

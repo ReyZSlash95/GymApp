@@ -20,6 +20,10 @@ import {
   faChartLine,
 } from '@fortawesome/free-solid-svg-icons';
 
+import {useNavigation} from '@react-navigation/native';
+import {useDispatch} from 'react-redux';
+import {setPlanHistoryId} from '../redux/actions/exerciseActions';
+
 import {
   countExercises,
   countSeriesAndReps,
@@ -33,7 +37,9 @@ import MuscleIllustration from '../bodyParts/MuscleIllustration';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 
 const TrainingDetail = ({route}) => {
+  const navigation = useNavigation();
   const {planId} = route.params;
+  const dispatch = useDispatch();
   const [planData, setPlanData] = useState(null);
   const [bodyPartColors, setBodyPartColors] = useState({});
   const [chartData, setChartData] = useState(null);
@@ -174,12 +180,28 @@ const TrainingDetail = ({route}) => {
     };
   };
 
+  const handleStartTraining = planId => {
+    dispatch(setPlanHistoryId(planId));
+    navigation.navigate('Training');
+    console.log(planId);
+  };
+
   useEffect(() => {
-    const fetchAllTrainingsByPlanId = async planId => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => handleStartTraining(planId)}
+          style={styles.headerButton}>
+          <Text style={styles.headerButtonText}>REPEAT TRAINING</Text>
+        </TouchableOpacity>
+      ),
+    });
+
+    const fetchAllTrainingsByPlanId = async planName => {
       try {
         const querySnapshot = await firestore()
           .collection('trainingHistory')
-          .where('planId', '==', planId)
+          .where('planName', '==', planName)
           .get();
 
         let trainings = [];
@@ -187,7 +209,6 @@ const TrainingDetail = ({route}) => {
           trainings.push(doc.data());
         });
 
-        // console.log('Trainings:', trainings);
         // Przetworzenie danych dla wykresu
         const processedChartData = processDataForChart(
           trainings,
@@ -209,12 +230,12 @@ const TrainingDetail = ({route}) => {
         if (documentSnapshot.exists) {
           // setPlanData(documentSnapshot.data());
           const data = documentSnapshot.data();
+          console.log('Plan data:', data);
           setPlanData(data);
           updateBodyPartColors(data.exercises);
 
-          console.log('Plan id:', data.planId);
           // Po pobraniu danych pierwszego treningu, pobierz wszystkie treningi o tym samym planId
-          fetchAllTrainingsByPlanId(data.planId);
+          fetchAllTrainingsByPlanId(data.planName);
         }
       } catch (error) {
         console.error('Error fetching training data:', error);
@@ -237,9 +258,9 @@ const TrainingDetail = ({route}) => {
   );
 
   const formatDuration = duration => {
-    const seconds = Math.floor((duration / 1000) % 60);
-    const minutes = Math.floor((duration / 1000 / 60) % 60);
-    const hours = Math.floor(duration / 1000 / 3600);
+    const seconds = Math.floor(duration % 60);
+    const minutes = Math.floor((duration / 60) % 60);
+    const hours = Math.floor(duration / 3600);
 
     const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
@@ -247,18 +268,6 @@ const TrainingDetail = ({route}) => {
 
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   };
-
-  if (chartData) {
-    console.log(
-      'Rendering chart with data:',
-      // chartData.labels,
-      // chartData.datasets,
-    );
-    console.log('chartData:', chartData.datasets[0]);
-    console.log('data labels:', chartData.labels[0]);
-    console.log('data', chartData.labels);
-    // Komponent LineChart
-  }
 
   const Legend = ({datasets}) => {
     return (
@@ -533,6 +542,18 @@ const TrainingDetail = ({route}) => {
 };
 
 const styles = StyleSheet.create({
+  // HEADER BUTTON
+  headerButton: {
+    backgroundColor: '#e4b04e',
+    padding: 5,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  headerButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  //
   scrollView: {
     flex: 1,
     backgroundColor: '#121214',
