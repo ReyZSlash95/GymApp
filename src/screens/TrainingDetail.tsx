@@ -20,6 +20,8 @@ import {
   faChartLine,
 } from '@fortawesome/free-solid-svg-icons';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
 import {setPlanHistoryId} from '../redux/actions/exerciseActions';
@@ -180,10 +182,17 @@ const TrainingDetail = ({route}) => {
     };
   };
 
-  const handleStartTraining = planId => {
-    dispatch(setPlanHistoryId(planId));
-    navigation.navigate('Training');
-    console.log(planId);
+  //  Zapisywanie planu id do asyncstorage
+  const handleStartTraining = async planId => {
+    try {
+      await AsyncStorage.setItem(
+        'activePlan',
+        JSON.stringify({id: planId, type: 'History'}),
+      );
+      navigation.navigate('Training', {screen: 'Training'});
+    } catch (error) {
+      console.error('Error saving plan ID:', error);
+    }
   };
 
   useEffect(() => {

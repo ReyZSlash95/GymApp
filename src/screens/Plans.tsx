@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 
 import {useDispatch} from 'react-redux';
-import {setPlanId} from '../redux/actions/exerciseActions';
 
 import DraggableFlatList from 'react-native-draggable-flatlist';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import firestore from '@react-native-firebase/firestore';
 import {useNavigation} from '@react-navigation/native';
@@ -64,11 +65,16 @@ const Plans = () => {
     setExpandedPlanId(expandedPlanId === planId ? null : planId); // Rozwijanie/zwijanie planu
   };
 
-  const handleStartTraining = planId => {
-    dispatch(setPlanId(planId));
-
-    navigation.navigate('Training');
-    console.log(planId);
+  const handleStartTraining = async planId => {
+    try {
+      await AsyncStorage.setItem(
+        'activePlan',
+        JSON.stringify({id: planId, type: 'Plans'}),
+      );
+      navigation.navigate('Training', {screen: 'Training'});
+    } catch (error) {
+      console.error('Error saving plan ID:', error);
+    }
   };
 
   const handleDeletePlan = planId => {

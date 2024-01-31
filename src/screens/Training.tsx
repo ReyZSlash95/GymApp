@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useRef, useEffect, useState, useCallback} from 'react';
 import {
   Alert,
   Button,
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
+
 import firestore from '@react-native-firebase/firestore';
 import FastImage from 'react-native-fast-image';
 import {CheckBox, Image} from 'react-native-elements';
@@ -22,18 +23,32 @@ import {
   resetPlanId,
 } from '../redux/actions/exerciseActions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import logo from '../img/Ui/LogoGymApp.png';
 import logoGym from '../img/Ui/LogoGym.png';
+import {LineChart} from 'react-native-chart-kit';
 
 const {width} = Dimensions.get('window');
+
+// TRAINING IMPORT MODULE
+
+// trainigDataHelpers.tsx import
+// import {fetchTrainingDataFromFirebase} from './Training/trainingDataHelpers';
+// import {loadTrainingDataFromAsyncStorage} from './Training/trainingDataHelpers';
 
 const Training = ({route}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const planIdFromRedux = useSelector(state => state.exercise.planId);
+
+  const [activePlan, setActivePlan] = useState({id: null, type: null});
+  const prevActivePlan = useRef(null);
+
   const planIdSourceFromRedux = useSelector(
     state => state.exercise.planIdSource,
   );
+
+  const [chartData, setChartData] = useState(null);
+
+  const [planData, setPlanData] = useState(null);
+  const [bodyPartColors, setBodyPartColors] = useState({});
 
   const trainingData = useSelector(state => state.exercise.trainingData);
 
@@ -42,76 +57,262 @@ const Training = ({route}) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
 
-  // test
-  const loadTrainingData = async () => {
-    console.log(planIdFromRedux, planIdSourceFromRedux);
-    if (planIdSourceFromRedux === 'History') {
-      try {
-        const trainingHistoryDoc = await firestore()
-          .collection('trainingHistory')
-          .doc(planIdFromRedux)
-          .get();
+  // CHART
+  const updateBodyPartColors = exercises => {
+    const bodyPartCounts = exercises.reduce((counts, exercise) => {
+      if (exercise.type) {
+        counts[exercise.type] = (counts[exercise.type] || 0) + 1;
+      }
+      return counts;
+    }, {});
 
-        if (trainingHistoryDoc.exists) {
-          let trainingHistoryData = trainingHistoryDoc.data();
+    const newColors = {};
+    for (const type in bodyPartCounts) {
+      newColors[type] = getColorBasedOnCount(bodyPartCounts[type]);
+    }
+    setBodyPartColors(newColors);
+  };
+  const getColorBasedOnCount = count => {
+    if (count >= 3) return '#ff0000';
+    if (count === 2) return '#ff5252';
+    if (count === 1) return '#ff7b7b';
 
-          // Przekształć 'completedDate' na timestamp
-          if (trainingHistoryData.completedDate) {
-            trainingHistoryData = {
-              ...trainingHistoryData,
-              completedDate: trainingHistoryData.completedDate.toMillis(),
-            };
+    return 'transparent';
+  };
+
+  const processDataForChart = (trainings, selectedTimeRange) => {
+    // Filter logic based on selectedTimeRange
+    const now = new Date();
+    const filteredTrainings = trainings.filter(training => {
+      const trainingDate = training.completedDate.toDate();
+      switch (selectedTimeRange) {
+        case 'month':
+          return (
+            trainingDate >=
+            new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+          );
+        case 'year':
+          return (
+            trainingDate >=
+            new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+          );
+        default:
+          return true; // dla zakresu 'all'
+      }
+    });
+
+    const dataByExercise = {};
+    const labels = new Set(); // Używamy Set do uniknięcia duplikatów
+
+    filteredTrainings.sort((a, b) => {
+      const dateA = a.completedDate.toDate();
+      const dateB = b.completedDate.toDate();
+      return dateA - dateB;
+    });
+
+    filteredTrainings.forEach(training => {
+      const {exercises, completedDate} = training;
+
+      if (!completedDate || typeof completedDate.toDate !== 'function') {
+        console.error('Missing or invalid completedDate:', completedDate);
+        return [];
+      }
+
+      const formattedCompletedDate = completedDate
+        .toDate()
+        .toLocaleDateString('en-US');
+      labels.add(formattedCompletedDate); // Dodajemy datę do zbioru etykiet
+
+      exercises.forEach(({name, series}) => {
+        if (!dataByExercise[name]) {
+          dataByExercise[name] = {};
+        }
+
+        let total1RM = 0;
+        let seriesCount = 0;
+
+        series.forEach(({weight, reps}) => {
+          const parsedWeight =
+            weight && !isNaN(weight) ? parseFloat(weight) : 0;
+          const parsedReps = reps && !isNaN(reps) ? parseInt(reps, 10) : 0;
+
+          // Oblicz 1RM używając wzoru Epleya
+          const oneRM = parsedWeight * (1 + 0.0333 * parsedReps);
+
+          if (!isNaN(oneRM)) {
+            total1RM += oneRM;
+            seriesCount++;
           }
+        });
 
-          dispatch(setTrainingData(trainingHistoryData));
+        // Oblicz średnią wartość 1RM dla tego ćwiczenia
+        const average1RM = seriesCount > 0 ? total1RM / seriesCount : 0;
 
-          // Zapisz dane historii treningu w AsyncStorage
-          await AsyncStorage.setItem(
-            'trainingData',
-            JSON.stringify(trainingHistoryData),
-          );
-        } else {
-          console.log('Brak danych historii treningu dla tego ID');
+        if (!dataByExercise[name][formattedCompletedDate]) {
+          dataByExercise[name][formattedCompletedDate] = 0;
         }
-      } catch (error) {
-        console.error('Błąd podczas ładowania historii treningu:', error);
-      }
-    } else if (planIdSourceFromRedux === 'Plans') {
-      try {
-        const planDoc = await firestore()
-          .collection('trainingPlans')
-          .doc(planIdFromRedux)
-          .get();
+        dataByExercise[name][formattedCompletedDate] = average1RM;
+      });
+    });
 
-        if (planDoc.exists) {
-          const planData = planDoc.data();
-          const createdAtTimestamp = planData.createdAt
-            ? planData.createdAt.toMillis()
-            : Date.now();
-          dispatch(
-            setTrainingData({...planData, createdAt: createdAtTimestamp}),
-          );
-          await AsyncStorage.setItem('trainingData', JSON.stringify(planData));
-        } else {
-          console.log('Brak danych planu treningowego dla tego ID');
-        }
-      } catch (error) {
-        console.error('Błąd podczas ładowania planu treningowego:', error);
-      }
-    } else {
-      const savedTrainingData = await AsyncStorage.getItem('trainingData');
-      if (savedTrainingData) {
-        dispatch(setTrainingData(JSON.parse(savedTrainingData)));
+    const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+
+    const datasets = Object.keys(dataByExercise).map((key, index) => {
+      // Wybór koloru dla zbioru danych na podstawie indexu
+      const color = colors[index % colors.length];
+
+      const exerciseData = [];
+      labels.forEach(label => {
+        exerciseData.push(dataByExercise[key][label] || 0);
+      });
+
+      return {
+        label: key,
+        data: exerciseData,
+        color: (opacity = 1) => color, // Stały kolor
+        strokeWidth: 2,
+      };
+    });
+
+    return {
+      labels: Array.from(labels),
+      datasets,
+    };
+  };
+
+  const fetchActivePlanId = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem('activePlan');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setActivePlan({id: parsedData.id, type: parsedData.type});
       } else {
-        console.log('Brak zapisanych danych treningowych');
+        console.log('Brak zapisanego ID planu');
+        // Możesz tutaj dodać logikę, która obsłuży brak planu treningowego
       }
+    } catch (error) {
+      console.error('Error parsing active plan ID:', error);
     }
   };
-  // end test
+
+  // POBIERANIE DANYCH TRENINGOWYCH Z FIREBASE ==================================
+  const fetchTrainingDataFromFirebase = async (id, type): Promise<void> => {
+    try {
+      console.log('fetchTrainingDataFromFirebase');
+
+      const savedTrainingData = await AsyncStorage.getItem('trainingData');
+      if (savedTrainingData) {
+        const parsedData = JSON.parse(savedTrainingData);
+        if (parsedData.id === id) {
+          console.log('Dane treningowe są już zapisane w AsyncStorage.');
+          dispatch(setTrainingData(parsedData));
+          return; // Zakończ funkcję, jeśli dane są już załadowane
+        }
+      }
+
+      console.log('Ładowanie danych z Firebase...');
+
+      // Reset timer for new training session
+      if (intervalId) {
+        clearInterval(intervalId);
+        setIntervalId(null);
+      }
+      setElapsedTime(0);
+
+      let planData;
+
+      if (type === 'History') {
+        const doc = await firestore()
+          .collection('trainingHistory')
+          .doc(id)
+          .get();
+
+        if (doc.exists) {
+          planData = {
+            ...doc.data(),
+            completedDate: doc.data().completedDate.toMillis(),
+            id: doc.id,
+          };
+        }
+      } else if (type === 'Plans') {
+        const doc = await firestore().collection('trainingPlans').doc(id).get();
+
+        if (doc.exists) {
+          planData = {
+            ...doc.data(),
+            createdAt: doc.data().createdAt.toMillis(),
+            id: doc.id,
+          };
+        }
+      }
+      if (planData) {
+        console.log('planData', planData);
+        console.log(planData.planName);
+
+        fetchAllTrainingsByPlanName(planData.planName);
+
+        await AsyncStorage.removeItem('trainingStartTime');
+        setIsTrainingActive(false);
+
+        dispatch(setTrainingData(planData));
+        await AsyncStorage.setItem('trainingData', JSON.stringify(planData));
+      } else {
+        console.log('No data found for this ID');
+      }
+    } catch (error) {
+      console.error('Error fetching training data from Firebase:', error);
+    }
+  };
+
+  const fetchAllTrainingsByPlanName = async planName => {
+    try {
+      const querySnapshot = await firestore()
+        .collection('trainingHistory')
+        .where('planName', '==', planName)
+        .get();
+
+      let trainings = [];
+      querySnapshot.forEach(doc => {
+        trainings.push(doc.data());
+      });
+
+      // Przetworzenie danych dla wykresu
+      const processedChartData = processDataForChart(trainings);
+      console.log('processedChartData:', processedChartData);
+      // setChartData(processedChartData);
+
+      // Zapisanie danych do AsyncStorage
+      await AsyncStorage.setItem(
+        'allTrainingsDataForLineChart',
+        JSON.stringify(processedChartData),
+      );
+    } catch (error) {
+      console.error('Error fetching all trainings by planName:', error);
+    }
+  };
+
+  // USE EFFECTS ================================================================
 
   useEffect(() => {
-    loadTrainingData();
+    console.log('useeffect1');
+    fetchActivePlanId();
+  }, [route]);
 
+  useEffect(() => {
+    console.log('useeffect2');
+    const {id, type} = activePlan;
+    if (id && type) {
+      fetchTrainingDataFromFirebase(id, type);
+    }
+  }, [activePlan]);
+
+  useEffect(() => {
+    console.log('useeffect3');
+    console.log('Aktualny czas treningu 123123123131:', elapsedTime);
+  }, [elapsedTime]);
+
+  useEffect(() => {
+    console.log('useeffect4');
     const checkActiveTraining = async () => {
       const savedStartTime = await AsyncStorage.getItem('trainingStartTime');
       if (savedStartTime) {
@@ -119,21 +320,36 @@ const Training = ({route}) => {
         setTrainingStartTime(startTime);
         setIsTrainingActive(true);
         startTimer(startTime);
+        console.log('start clock 12345');
       }
     };
 
+    const loadChartData = async () => {
+      const storedData = await AsyncStorage.getItem(
+        'allTrainingsDataForLineChart',
+      );
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setChartData(parsedData);
+      }
+    };
+
+    loadChartData();
     checkActiveTraining();
+  }, []);
 
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [planIdFromRedux, route.params?.trainingHistoryId, dispatch, getPlan]);
-
+  // TIMER TIMER TIMER ==========================================================
   const startTimer = startTime => {
+    if (intervalId) {
+      console.log('Stopping existing timer with intervalId:', intervalId);
+      clearInterval(intervalId);
+    }
+    console.log('Timer started with start time:', startTime);
     const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      const currentTime = Math.floor((Date.now() - startTime) / 1000);
+      console.log('Aktualny czas treningu:', currentTime);
+      console.log('intervalid1', interval);
+      setElapsedTime(currentTime);
     }, 1000);
     setIntervalId(interval);
   };
@@ -143,57 +359,50 @@ const Training = ({route}) => {
       clearInterval(intervalId);
       setIntervalId(null);
     }
+    console.log('Timer zatrzymany. Końcowy czas treningu:', elapsedTime);
     setElapsedTime(0);
   };
 
-  const getPlan = useCallback(
-    async planId => {
-      try {
-        const planDocument = await firestore()
-          .collection('trainingPlans')
-          .doc(planId)
-          .get();
+  const formatTime = seconds => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
-        if (planDocument.exists) {
-          const planData = planDocument.data();
-
-          // Konwersja Timestamp na milisekundy
-          const createdAtTimestamp = planData.createdAt
-            ? planData.createdAt.toMillis() // zmiana z `planData.createdAt.seconds * 1000`
-            : Date.now();
-
-          dispatch(
-            setTrainingData({...planData, createdAt: createdAtTimestamp}),
-          );
-          await AsyncStorage.setItem('trainingData', JSON.stringify(planData));
-        } else {
-          Alert.alert('Błąd', 'Nie znaleziono planu treningowego.');
-        }
-      } catch (error) {
-        console.error('Błąd podczas pobierania planu:', error);
-      }
-    },
-    [dispatch],
-  );
-
-  // REST OF THE CODE
+  // START END SAVETRAINING  ==========================================================
 
   const startTraining = async () => {
     const startTime = Date.now();
+    console.log('Trening rozpoczęty o czasie:', startTime);
+
     await AsyncStorage.setItem('trainingStartTime', startTime.toString());
-    if (planIdFromRedux) {
-      await AsyncStorage.setItem('activePlanId', planIdFromRedux.toString());
+    if (activePlan.id) {
+      await AsyncStorage.setItem('activePlan.id', [activePlan.id].toString());
     }
     setTrainingStartTime(startTime);
     setIsTrainingActive(true);
     startTimer(startTime);
+
+    // Dodaj nowy punkt danych (0) do wykresu dla każdego ćwiczenia
+    if (chartData) {
+      const newChartData = {
+        // zapytanie do czatgpt - czy można to jakoś uprościć?
+        ...chartData,
+        datasets: chartData.datasets.map(dataset => ({
+          ...dataset,
+          data: [...dataset.data, 0], // Dodaj 0 na końcu każdego zbioru danych
+        })),
+      };
+      setChartData(newChartData);
+    }
   };
 
   const endTraining = async () => {
     const duration = elapsedTime;
     saveTrainingHistory(duration);
     await AsyncStorage.removeItem('trainingStartTime');
-    await AsyncStorage.removeItem('activePlanId');
+    await AsyncStorage.removeItem('activePlan');
     setIsTrainingActive(false);
     stopAndResetTimer();
   };
@@ -208,6 +417,40 @@ const Training = ({route}) => {
       ],
     );
   };
+
+  const saveTrainingHistory = async duration => {
+    console.log('Zapisywanie historii treningu z czasem trwania:', duration);
+    const savedPlanId = await AsyncStorage.getItem('activePlan.id');
+    if (!savedPlanId || !trainingData || !trainingData.exercises) {
+      console.error('Plan ID or Plan data is missing');
+      return;
+    }
+
+    const trainingHistoryData = {
+      completedDate: firestore.FieldValue.serverTimestamp(),
+      planId: savedPlanId,
+      exercises: trainingData.exercises,
+      duration, // Czas trwania treningu
+      planName: trainingData.planName,
+    };
+
+    try {
+      await firestore().collection('trainingHistory').add(trainingHistoryData);
+      Alert.alert('Sukces', 'Historia treningu została zapisana.');
+      await AsyncStorage.removeItem('trainingData');
+      dispatch(resetTrainingData());
+      dispatch(resetPlanId());
+      navigation.navigate('TrainingSummary', {plan: null});
+    } catch (error) {
+      console.error('Błąd podczas zapisywania historii treningu:', error);
+      Alert.alert(
+        'Błąd',
+        'Wystąpił błąd podczas zapisywania historii treningu.',
+      );
+    }
+  };
+
+  // ADD REMOVE SERIES =========================================================
 
   const handleDuplicateLastSeries = async exerciseIndex => {
     const updatedExercises = trainingData.exercises.map((exercise, index) => {
@@ -246,57 +489,110 @@ const Training = ({route}) => {
     );
   };
 
-  const saveTrainingHistory = async duration => {
-    const savedPlanId = await AsyncStorage.getItem('activePlanId');
-    if (!savedPlanId || !trainingData || !trainingData.exercises) {
-      console.error('Plan ID or Plan data is missing');
-      return;
-    }
+  // TRAINING SERIES UPDATE =================================================
 
-    const trainingHistoryData = {
-      completedDate: firestore.FieldValue.serverTimestamp(),
-      planId: savedPlanId,
-      exercises: trainingData.exercises,
-      duration, // Czas trwania treningu
-      planName: trainingData.planName,
-    };
+  // Aktualizacja danych w AsyncStorage
 
-    try {
-      await firestore().collection('trainingHistory').add(trainingHistoryData);
-      Alert.alert('Sukces', 'Historia treningu została zapisana.');
-      await AsyncStorage.removeItem('trainingData');
-      dispatch(resetTrainingData());
-      dispatch(resetPlanId());
-      navigation.navigate('TrainingSummary', {plan: null});
-    } catch (error) {
-      console.error('Błąd podczas zapisywania historii treningu:', error);
-      Alert.alert(
-        'Błąd',
-        'Wystąpił błąd podczas zapisywania historii treningu.',
+  // Aktualizowana funkcja handleSeriesCheck
+  const handleSeriesCheck = async (exerciseIndex, serieIndex) => {
+    const storedData = await AsyncStorage.getItem('trainingData');
+    const trainingData = storedData ? JSON.parse(storedData) : null;
+
+    if (trainingData) {
+      const newChecked =
+        !trainingData.exercises[exerciseIndex].series[serieIndex].checked;
+      trainingData.exercises[exerciseIndex].series[serieIndex].checked =
+        newChecked;
+
+      // Aktualizuj stan Redux
+      dispatch(
+        updateSeriesData(exerciseIndex, serieIndex, 'checked', newChecked),
       );
+
+      // Aktualizuj AsyncStorage
+      await updateTrainingDataInStorage(trainingData);
+
+      // Aktualizuj wykres, jeśli to konieczne
+      updateLastChartDataPoint(trainingData);
     }
   };
 
+  // Aktualizowana funkcja handleSeriesUpdate
   const handleSeriesUpdate = async (
     exerciseIndex,
     serieIndex,
     field,
     value,
   ) => {
-    dispatch(updateSeriesData(exerciseIndex, serieIndex, field, value));
-    const updatedTrainingData = {...trainingData};
-    updatedTrainingData.exercises[exerciseIndex].series[serieIndex][field] =
-      value;
+    let updatedValue = value;
+    if (field === 'weight' && value !== '') {
+      updatedValue = parseFloat(value);
+    } else if (field === 'reps' && value !== '') {
+      updatedValue = parseInt(value, 10);
+    }
+
+    if (!isNaN(updatedValue)) {
+      const storedData = await AsyncStorage.getItem('trainingData');
+      const trainingData = storedData ? JSON.parse(storedData) : null;
+
+      if (trainingData) {
+        trainingData.exercises[exerciseIndex].series[serieIndex][field] =
+          updatedValue;
+
+        // Aktualizuj stan Redux
+        dispatch(
+          updateSeriesData(exerciseIndex, serieIndex, field, updatedValue),
+        );
+
+        // Aktualizuj AsyncStorage
+        await updateTrainingDataInStorage(trainingData);
+
+        // Aktualizuj wykres, jeśli to konieczne
+        updateLastChartDataPoint(trainingData);
+      }
+    }
+  };
+
+  const updateTrainingDataInStorage = async updatedTrainingData => {
     await AsyncStorage.setItem(
       'trainingData',
       JSON.stringify(updatedTrainingData),
     );
   };
 
-  const handleSeriesCheck = (exerciseIndex, serieIndex) => {
-    const checked =
-      !trainingData.exercises[exerciseIndex].series[serieIndex].checked;
-    dispatch(updateSeriesData(exerciseIndex, serieIndex, 'checked', checked));
+  // LAST CHART DATA POINT ====================================================
+
+  const updateLastChartDataPoint = updatedTrainingData => {
+    if (chartData && updatedTrainingData && updatedTrainingData.exercises) {
+      let updatedChartData = {...chartData};
+
+      // Logika aktualizacji danych wykresu
+      updatedTrainingData.exercises.forEach((exercise, index) => {
+        const newExerciseDataPoint = calculateExerciseData(exercise);
+        updatedChartData.datasets[index].data[
+          updatedChartData.datasets[index].data.length - 1
+        ] = newExerciseDataPoint;
+      });
+
+      setChartData(updatedChartData);
+    }
+  };
+
+  // Aktualizowana funkcja calculateExerciseData
+  const calculateExerciseData = exercise => {
+    const validSeries = exercise.series.filter(
+      serie => serie.checked && !isNaN(serie.weight) && !isNaN(serie.reps),
+    );
+
+    let total1RM = 0;
+
+    validSeries.forEach(serie => {
+      const oneRM =
+        parseFloat(serie.weight) * (1 + 0.0333 * parseInt(serie.reps, 10));
+      total1RM += oneRM;
+    });
+
+    return validSeries.length > 0 ? total1RM / validSeries.length : 0;
   };
 
   if (!trainingData || !trainingData.exercises) {
@@ -315,13 +611,6 @@ const Training = ({route}) => {
       </View>
     );
   }
-
-  const formatTime = seconds => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-  };
 
   return (
     <View style={styles.container}>
@@ -404,9 +693,44 @@ const Training = ({route}) => {
                 <Text style={styles.addSeriesButtonText}>DODAJ</Text>
               </TouchableOpacity>
             </View>
+            <View>
+              {chartData &&
+                chartData.datasets &&
+                chartData.datasets[exerciseIndex] && (
+                  <View style={styles.exerciseChart}>
+                    <LineChart
+                      data={{
+                        labels: chartData.labels,
+                        datasets: [chartData.datasets[exerciseIndex]],
+                      }}
+                      width={Dimensions.get('window').width - 40}
+                      height={100}
+                      chartConfig={{
+                        backgroundColor: '#e4b04e',
+                        backgroundGradientFrom: '#e4b04e',
+                        backgroundGradientTo: '#e4b04e',
+                        color: (opacity = 1) =>
+                          `rgba(255, 255, 255, ${opacity})`,
+                        propsForDots: {
+                          r: '6',
+                          strokeWidth: '2',
+                          stroke: '#ffa726',
+                        },
+                      }}
+                      bezier
+                      style={{
+                        marginVertical: 8,
+                        borderRadius: 16,
+                      }}
+                    />
+                  </View>
+                )}
+            </View>
           </View>
         ))}
       </ScrollView>
+      {/* <View>{renderChart()}</View> */}
+      {/* Dodanie wykresu dla ćwiczenia */}
       <View style={styles.buttonContainer}>
         {!isTrainingActive ? (
           <Button title="Rozpocznij Trening" onPress={startTraining} />
